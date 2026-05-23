@@ -35,7 +35,7 @@ react-frontend-app/
 
 ## Prerequisites
 
-- Node.js (check `.nvmrc` or use current LTS)
+- Node.js (use current LTS)
 - npm
 
 ## Getting Started
@@ -58,10 +58,10 @@ Start the backend service before using the Users page.
 
 ## Pages
 
-| Route    | Component                              | Description                          |
-| -------- | -------------------------------------- | ------------------------------------ |
-| `/`      | [src/pages/HomePage.tsx](src/pages/HomePage.tsx)   | Home page                            |
-| `/users` | [src/pages/UsersPage.tsx](src/pages/UsersPage.tsx) | Fetches and displays users in a table |
+| Route    | Component                                                        | Description                           |
+| -------- | ---------------------------------------------------------------- | ------------------------------------- |
+| `/`      | [src/pages/HomePage.tsx](src/pages/HomePage.tsx)                 | Home page                             |
+| `/users` | [src/pages/UsersPage.tsx](src/pages/UsersPage.tsx)               | Fetches and displays users in a table |
 
 ## Available Scripts
 
@@ -101,6 +101,22 @@ Output goes to `dist/`. The build step runs `tsc -b` first to type-check, then V
 - **Styling:** SCSS Modules for component-scoped styles; `src/index.css` for global styles.
 - **Types:** Shared TypeScript interfaces live in `src/interfaces/`. Current types: `User` (`id`, `name`, `email`, `age`).
 - **TypeScript config:** Split into three files — project references root in `tsconfig.json`, `tsconfig.app.json` for source, `tsconfig.node.json` for Vite config.
+
+## Development Workflow
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start the backend service (separate repo, port 4000)
+
+# 3. Start the frontend dev server
+npm run dev
+
+# 4. Before committing — lint and build
+npm run lint
+npm run build
+```
 
 ## Testing
 
