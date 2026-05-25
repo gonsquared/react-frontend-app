@@ -8,6 +8,11 @@ const emptyUserForm = {
   email: "",
 };
 
+type ToastMessage = {
+  message: string;
+  type: "success" | "error";
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,8 +22,13 @@ export default function UsersPage() {
   const [userForm, setUserForm] = useState(emptyUserForm);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const isViewingUser = selectedUser !== null;
   const canEditForm = !isViewingUser || isEditingUser;
+
+  const showToast = (message: string, type: ToastMessage["type"]) => {
+    setToast({ message, type });
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -70,6 +80,7 @@ export default function UsersPage() {
     event.preventDefault();
     setIsSaving(true);
     setSaveError("");
+    setToast(null);
 
     try {
       const isUpdatingUser = selectedUser !== null;
@@ -100,10 +111,17 @@ export default function UsersPage() {
           : [...currentUsers, savedUser],
       );
       closeModal();
-    } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Failed to save user",
+      showToast(
+        isUpdatingUser
+          ? "User updated successfully."
+          : "User created successfully.",
+        "success",
       );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save user";
+      setSaveError(message);
+      showToast(message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -129,10 +147,30 @@ export default function UsersPage() {
     console.log("Users data updated:", users);
   }, [users]);
 
+  useEffect(() => {
+    if (!toast) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setToast(null);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [toast]);
+
   if (loading) return <p>Loading users...</p>;
 
   return (
     <>
+      {toast ? (
+        <div
+          className={`${styles.toast} ${styles[toast.type]}`}
+          role={toast.type === "error" ? "alert" : "status"}
+        >
+          {toast.message}
+        </div>
+      ) : null}
       <div className={styles.pageHeader}>
         <h1>Users</h1>
         <button

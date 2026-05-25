@@ -67,6 +67,10 @@ describe("App", () => {
     cy.findByRole("button", { name: "Save" }).click();
     cy.wait("@createUser");
 
+    cy.findByRole("status").should(
+      "contain.text",
+      "User created successfully.",
+    );
     cy.findByRole("cell", { name: newUser.firstName }).should("be.visible");
     cy.findByRole("cell", { name: newUser.email }).should("be.visible");
   });

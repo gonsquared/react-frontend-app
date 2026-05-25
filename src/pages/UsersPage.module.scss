@@ -1,3 +1,27 @@
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  border: 1px solid;
+  border-radius: 0.25rem;
+  background-color: var(--page-background);
+  box-shadow: 0 0.75rem 1.5rem rgb(0 0 0 / 18%);
+  font-weight: 700;
+}
+
+.success {
+  border-color: #2e7d32;
+  color: #1b5e20;
+}
+
+.error {
+  border-color: #c62828;
+  color: #b71c1c;
+}
+
 .pageHeader {
   display: flex;
   align-items: center;
