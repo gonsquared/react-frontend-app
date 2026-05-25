@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/HomePage";
-import Users from "./pages/UsersPage";
+import Home from "./pages/home/HomePage";
+import Users from "./pages/users/UsersPage";
 import styles from "./App.module.scss";
 
 type Theme = "light" | "dark";

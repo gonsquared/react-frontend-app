@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import UsersPage from "./UsersPage";
+import UsersPage from "../../pages/users/UsersPage";
 
 describe("UsersPage", () => {
   it("renders users returned by the API", async () => {
@@ -149,10 +149,9 @@ describe("UsersPage", () => {
     cy.findByLabelText("Email").type("grace@example.com");
     cy.findByRole("button", { name: "Save" }).click();
 
-    cy.findAllByRole("alert")
-      .should("have.length", 2)
-      .each((alert) => {
-        expect(alert).to.contain.text("Email is already used");
-      });
+    cy.findAllByRole("alert").should("have.length", 1);
+    cy.findByRole("alert")
+      .should("contain.text", "Email is already used")
+      .and("have.css", "position", "fixed");
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import User from "../interfaces/User";
+import User from "../../interfaces/User";
 import styles from "./UsersPage.module.scss";
 
 const emptyUserForm = {
@@ -21,7 +21,6 @@ export default function UsersPage() {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [userForm, setUserForm] = useState(emptyUserForm);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const isViewingUser = selectedUser !== null;
   const canEditForm = !isViewingUser || isEditingUser;
@@ -35,14 +34,12 @@ export default function UsersPage() {
     setSelectedUser(null);
     setIsEditingUser(false);
     setUserForm(emptyUserForm);
-    setSaveError("");
   };
 
   const openAddModal = () => {
     setSelectedUser(null);
     setIsEditingUser(false);
     setUserForm(emptyUserForm);
-    setSaveError("");
     setIsModalOpen(true);
   };
 
@@ -54,17 +51,13 @@ export default function UsersPage() {
       lastName: user.lastName,
       email: user.email,
     });
-    setSaveError("");
     setIsModalOpen(true);
   };
 
-  const enableUserEditing = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
+  const enableUserEditing = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     setIsEditingUser(true);
-    setSaveError("");
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +72,6 @@ export default function UsersPage() {
   const handleSaveUser = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSaving(true);
-    setSaveError("");
     setToast(null);
 
     try {
@@ -120,7 +112,6 @@ export default function UsersPage() {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save user";
-      setSaveError(message);
       showToast(message, "error");
     } finally {
       setIsSaving(false);
@@ -276,11 +267,6 @@ export default function UsersPage() {
                   disabled={isSaving || !canEditForm}
                 />
               </label>
-              {saveError ? (
-                <p className={styles.formError} role="alert">
-                  {saveError}
-                </p>
-              ) : null}
               <div className={styles.modalActions}>
                 <button type="button" onClick={closeModal} disabled={isSaving}>
                   {isViewingUser ? "Close" : "Cancel"}

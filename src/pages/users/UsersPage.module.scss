@@ -5,21 +5,20 @@
   z-index: 2;
   max-width: min(24rem, calc(100vw - 2rem));
   padding: 0.75rem 1rem;
-  border: 1px solid;
+  border: 2px solid;
   border-radius: 0.25rem;
   background-color: var(--page-background);
+  color: #000000;
   box-shadow: 0 0.75rem 1.5rem rgb(0 0 0 / 18%);
   font-weight: 700;
 }
 
 .success {
   border-color: #2e7d32;
-  color: #1b5e20;
 }
 
 .error {
   border-color: #c62828;
-  color: #b71c1c;
 }
 
 .pageHeader {
@@ -130,11 +129,6 @@
     background-color: var(--page-background);
     color: var(--page-text);
   }
-}
-
-.formError {
-  margin: 0;
-  color: #c62828;
 }
 
 .modalActions {
