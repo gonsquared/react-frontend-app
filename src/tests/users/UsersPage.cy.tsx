@@ -153,5 +153,43 @@ describe("UsersPage", () => {
     cy.findByRole("alert")
       .should("contain.text", "Email is already used")
       .and("have.css", "position", "fixed");
+    cy.findByLabelText("Email").should("have.attr", "aria-invalid", "true");
+    cy.findByLabelText("Email").should(
+      "have.css",
+      "border-color",
+      "rgb(198, 40, 40)",
+    );
+  });
+
+  it("clears an errored field highlight when the field changes", () => {
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .onFirstCall()
+      .resolves(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .onSecondCall()
+      .resolves(
+        new Response(JSON.stringify({ detail: "Email already exists" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    render(<UsersPage />);
+
+    cy.findByLabelText("Add user").click();
+    cy.findByLabelText("First Name").type("Grace");
+    cy.findByLabelText("Last Name").type("Hopper");
+    cy.findByLabelText("Email").type("grace@example.com");
+    cy.findByRole("button", { name: "Save" }).click();
+
+    cy.findByLabelText("Email").should("have.attr", "aria-invalid", "true");
+    cy.findByLabelText("Email").clear().type("new@example.com");
+
+    cy.findByLabelText("Email").should("not.have.attr", "aria-invalid");
   });
 });

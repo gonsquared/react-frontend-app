@@ -8,9 +8,23 @@ const emptyUserForm = {
   email: "",
 };
 
+type UserFormField = keyof typeof emptyUserForm;
+
 type ToastMessage = {
   message: string;
   type: "success" | "error";
+};
+
+type FieldErrors = Partial<Record<UserFormField, boolean>>;
+
+const getErrorField = (message: string): UserFormField | null => {
+  const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes("email")) return "email";
+  if (lowerMessage.includes("first name")) return "firstName";
+  if (lowerMessage.includes("last name")) return "lastName";
+
+  return null;
 };
 
 export default function UsersPage() {
@@ -20,6 +34,7 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [userForm, setUserForm] = useState(emptyUserForm);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const isViewingUser = selectedUser !== null;
@@ -34,12 +49,14 @@ export default function UsersPage() {
     setSelectedUser(null);
     setIsEditingUser(false);
     setUserForm(emptyUserForm);
+    setFieldErrors({});
   };
 
   const openAddModal = () => {
     setSelectedUser(null);
     setIsEditingUser(false);
     setUserForm(emptyUserForm);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -51,6 +68,7 @@ export default function UsersPage() {
       lastName: user.lastName,
       email: user.email,
     });
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -58,20 +76,30 @@ export default function UsersPage() {
     event.preventDefault();
     event.stopPropagation();
     setIsEditingUser(true);
+    setFieldErrors({});
   };
 
   const handleFormChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+    const fieldName = name as UserFormField;
 
     setUserForm((currentForm) => ({
       ...currentForm,
-      [name]: value,
+      [fieldName]: value,
     }));
+    setFieldErrors((currentErrors) => {
+      if (!currentErrors[fieldName]) return currentErrors;
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[fieldName];
+      return nextErrors;
+    });
   };
 
   const handleSaveUser = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSaving(true);
+    setFieldErrors({});
     setToast(null);
 
     try {
@@ -112,6 +140,12 @@ export default function UsersPage() {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save user";
+      const errorField = getErrorField(message);
+
+      if (errorField) {
+        setFieldErrors({ [errorField]: true });
+      }
+
       showToast(message, "error");
     } finally {
       setIsSaving(false);
@@ -232,6 +266,7 @@ export default function UsersPage() {
               <label>
                 First Name
                 <input
+                  className={fieldErrors.firstName ? styles.fieldError : ""}
                   type="text"
                   name="firstName"
                   value={userForm.firstName}
@@ -240,11 +275,13 @@ export default function UsersPage() {
                   required
                   minLength={2}
                   disabled={isSaving || !canEditForm}
+                  aria-invalid={fieldErrors.firstName ? true : undefined}
                 />
               </label>
               <label>
                 Last Name
                 <input
+                  className={fieldErrors.lastName ? styles.fieldError : ""}
                   type="text"
                   name="lastName"
                   value={userForm.lastName}
@@ -253,11 +290,13 @@ export default function UsersPage() {
                   required
                   minLength={2}
                   disabled={isSaving || !canEditForm}
+                  aria-invalid={fieldErrors.lastName ? true : undefined}
                 />
               </label>
               <label>
                 Email
                 <input
+                  className={fieldErrors.email ? styles.fieldError : ""}
                   type="email"
                   name="email"
                   value={userForm.email}
@@ -265,6 +304,7 @@ export default function UsersPage() {
                   onChange={handleFormChange}
                   required
                   disabled={isSaving || !canEditForm}
+                  aria-invalid={fieldErrors.email ? true : undefined}
                 />
               </label>
               <div className={styles.modalActions}>
