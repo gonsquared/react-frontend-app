@@ -48,7 +48,11 @@ export default function UsersPage() {
     setIsModalOpen(true);
   };
 
-  const enableUserEditing = () => {
+  const enableUserEditing = (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
     setIsEditingUser(true);
     setSaveError("");
   };
@@ -248,6 +252,7 @@ export default function UsersPage() {
                     type="button"
                     onClick={enableUserEditing}
                     disabled={isSaving}
+                    aria-label="Edit user"
                   >
                     Edit
                   </button>
