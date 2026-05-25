@@ -9,6 +9,7 @@ describe("UsersPage", () => {
         firstName: "Ada",
         lastName: "Lovelace",
         email: "ada@example.com",
+        status: "active",
       },
     ];
 
@@ -28,10 +29,36 @@ describe("UsersPage", () => {
     expect(await screen.findByText("Ada")).to.not.equal(null);
     expect(await screen.findByText("Lovelace")).to.not.equal(null);
     expect(await screen.findByText("ada@example.com")).to.not.equal(null);
+    expect(await screen.findByText("Active")).to.not.equal(null);
     cy.get("@fetchUsers").should(
       "have.been.calledWith",
       "http://localhost:4000/api/users/",
     );
+  });
+
+  it("renders legacy users without a status as inactive", async () => {
+    const users = [
+      {
+        id: "1",
+        firstName: "Legacy",
+        lastName: "User",
+        email: "legacy@example.com",
+      },
+    ];
+
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .resolves(
+        new Response(JSON.stringify(users), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    render(<UsersPage />);
+
+    expect(await screen.findByText("Legacy")).to.not.equal(null);
+    expect(await screen.findByText("Inactive")).to.not.equal(null);
   });
 
   it("shows a success toast after creating a user", () => {
@@ -52,6 +79,7 @@ describe("UsersPage", () => {
             firstName: "Grace",
             lastName: "Hopper",
             email: "grace@example.com",
+            status: "inactive",
           }),
           {
             status: 201,
@@ -73,6 +101,7 @@ describe("UsersPage", () => {
       "User created successfully.",
     );
     cy.findByText("Grace").should("exist");
+    cy.findByText("Inactive").should("exist");
   });
 
   it("shows a success toast after updating a user", () => {
@@ -82,6 +111,7 @@ describe("UsersPage", () => {
         firstName: "Ada",
         lastName: "Lovelace",
         email: "ada@example.com",
+        status: "active",
       },
     ];
 
@@ -101,6 +131,7 @@ describe("UsersPage", () => {
             firstName: "Ada",
             lastName: "Byron",
             email: "ada@example.com",
+            status: "active",
           }),
           {
             status: 200,

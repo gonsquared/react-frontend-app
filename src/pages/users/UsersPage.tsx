@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import User from "../../interfaces/User";
+import User, { type UserStatus } from "../../interfaces/User";
 import styles from "./UsersPage.module.scss";
 
 const emptyUserForm = {
@@ -26,6 +26,11 @@ const getErrorField = (message: string): UserFormField | null => {
 
   return null;
 };
+
+const getUserStatus = (user: User): UserStatus => user.status ?? "inactive";
+
+const getStatusLabel = (status: UserStatus) =>
+  status.charAt(0).toUpperCase() + status.slice(1);
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -213,27 +218,37 @@ export default function UsersPage() {
             <th>First Name</th>
             <th>Last Name</th>
             <th>Email</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr
-              className={styles.userRow}
-              key={user.id}
-              tabIndex={0}
-              onClick={() => openUserModal(user)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  openUserModal(user);
-                }
-              }}
-            >
-              <td>{user.firstName}</td>
-              <td>{user.lastName}</td>
-              <td>{user.email}</td>
-            </tr>
-          ))}
+          {users.map((user) => {
+            const status = getUserStatus(user);
+
+            return (
+              <tr
+                className={styles.userRow}
+                key={user.id}
+                tabIndex={0}
+                onClick={() => openUserModal(user)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openUserModal(user);
+                  }
+                }}
+              >
+                <td>{user.firstName}</td>
+                <td>{user.lastName}</td>
+                <td>{user.email}</td>
+                <td>
+                  <span className={`${styles.statusBadge} ${styles[status]}`}>
+                    {getStatusLabel(status)}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {isModalOpen ? (
@@ -307,6 +322,18 @@ export default function UsersPage() {
                   aria-invalid={fieldErrors.email ? true : undefined}
                 />
               </label>
+              {isViewingUser && selectedUser ? (
+                <div className={styles.readOnlyField}>
+                  <span>Status</span>
+                  <span
+                    className={`${styles.statusBadge} ${
+                      styles[getUserStatus(selectedUser)]
+                    }`}
+                  >
+                    {getStatusLabel(getUserStatus(selectedUser))}
+                  </span>
+                </div>
+              ) : null}
               <div className={styles.modalActions}>
                 <button type="button" onClick={closeModal} disabled={isSaving}>
                   {isViewingUser ? "Close" : "Cancel"}

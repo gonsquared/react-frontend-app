@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import type { UserStatus } from "../../interfaces/User";
 import styles from "./LoginPage.module.scss";
 
 const emptyLoginForm = {
@@ -22,6 +23,7 @@ type LoginResponse = {
     firstName: string;
     lastName: string;
     email: string;
+    status: UserStatus;
   };
 };
 

@@ -77,6 +77,39 @@
   }
 }
 
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 5rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.active {
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.inactive {
+  border-color: #8a6d1d;
+  color: #8a6d1d;
+}
+
+.archived {
+  border-color: #626262;
+  color: #626262;
+}
+
+.readOnlyField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
 .modalOverlay {
   position: fixed;
   inset: 0;

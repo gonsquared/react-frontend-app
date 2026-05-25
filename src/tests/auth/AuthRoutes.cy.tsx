@@ -51,6 +51,7 @@ describe("Auth routes", () => {
               firstName: "Jane",
               lastName: "Doe",
               email: "jane@example.com",
+              status: "active",
             },
           }),
           {
@@ -97,6 +98,7 @@ describe("Auth routes", () => {
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
+        status: "active",
       },
     );
     cy.location("pathname").should("equal", "/users");
@@ -169,6 +171,7 @@ describe("Auth routes", () => {
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
+        status: "active",
       }),
     );
 
@@ -202,7 +205,7 @@ describe("Auth routes", () => {
               firstName: "Jane",
               lastName: "Doe",
               email: "jane@example.com",
-              isEmailActivated: false,
+              status: "inactive",
             },
           }),
           {
