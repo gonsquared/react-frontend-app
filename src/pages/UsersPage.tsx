@@ -113,7 +113,7 @@ export default function UsersPage() {
     console.log("Fetching users data...");
     const getData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/users");
+        const response = await fetch("http://localhost:4000/api/users/");
         const data = await response.json();
         setUsers(data);
       } catch (error) {
