@@ -20,6 +20,7 @@ react-frontend-app/
 ├── docker-compose.yml  # Docker Compose service definition
 ├── nginx.conf          # Nginx static server config for Docker
 ├── .dockerignore       # Files excluded from Docker build context
+├── bun.lock            # Bun dependency lockfile
 ├── tsconfig.json       # TypeScript project references root
 ├── tsconfig.app.json   # TypeScript config for src files
 ├── tsconfig.node.json  # TypeScript config for Vite config file
@@ -40,17 +41,16 @@ react-frontend-app/
 
 ## Prerequisites
 
-- Node.js (use current LTS)
-- npm
+- Bun 1.3.12 or newer
 
 ## Getting Started
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Start the development server
-npm run dev
+bun run dev
 ```
 
 The app runs at `http://localhost:5173` by default.
@@ -72,12 +72,12 @@ Start the backend service before using the Users page.
 
 | Command           | Description                                    |
 | ----------------- | ---------------------------------------------- |
-| `npm run dev`     | Start development server with HMR (port 5173)  |
-| `npm run build`   | Type-check and produce a production build      |
-| `npm run preview` | Serve the production build locally             |
-| `npm run lint`    | Run ESLint across all TypeScript source files  |
-| `npm test`        | Run Cypress component tests                    |
-| `npm run test:e2e` | Run Cypress end-to-end tests                  |
+| `bun run dev`     | Start development server with HMR (port 5173)  |
+| `bun run build`   | Type-check and produce a production build      |
+| `bun run preview` | Serve the production build locally             |
+| `bun run lint`    | Run ESLint across all TypeScript source files  |
+| `bun run test`    | Run Cypress component tests                    |
+| `bun run test:e2e` | Run Cypress end-to-end tests                  |
 
 ## Linting
 
@@ -88,7 +88,7 @@ Uses ESLint 9 flat config with:
 - `eslint-plugin-react-refresh`
 
 ```bash
-npm run lint
+bun run lint
 ```
 
 To enable stricter type-aware lint rules, update `eslint.config.js` to use `tseslint.configs.recommendedTypeChecked` and add `parserOptions.project` pointing to both `tsconfig.app.json` and `tsconfig.node.json`.
@@ -96,14 +96,14 @@ To enable stricter type-aware lint rules, update `eslint.config.js` to use `tses
 ## Build
 
 ```bash
-npm run build
+bun run build
 ```
 
 Output goes to `dist/`. The build step runs `tsc -b` first to type-check, then Vite bundles for production.
 
 ## Docker
 
-The Docker image builds the Vite app in a Node.js stage, then serves the static `dist/` output with Nginx.
+The Docker image builds the Vite app in a Bun stage, then serves the static `dist/` output with Nginx.
 
 ```bash
 # Build the production image
@@ -132,16 +132,16 @@ The Users page still fetches `http://localhost:4000/api/users` from the browser,
 
 ```bash
 # 1. Install dependencies
-npm install
+bun install
 
 # 2. Start the backend service (separate repo, port 4000)
 
 # 3. Start the frontend dev server
-npm run dev
+bun run dev
 
 # 4. Before committing — lint and build
-npm run lint
-npm run build
+bun run lint
+bun run build
 
 # Optional: build and run the production Docker image
 docker build -t react-frontend-app .
@@ -158,35 +158,35 @@ as the browser test runner.
 
 ```bash
 # Run component tests
-npm test
+bun run test
 
 # Open component tests interactively
-npm run test:component:open
+bun run test:component:open
 
 # Run end-to-end tests
-npm run test:e2e
+bun run test:e2e
 
 # Open end-to-end tests interactively
-npm run test:e2e:open
+bun run test:e2e:open
 ```
 
 Component specs live next to the components as `*.cy.tsx` files. End-to-end
 specs live in `cypress/e2e/`.
 
-Cypress was installed without downloading its binary during setup. If Cypress
-has not been installed on this machine yet, run `npx cypress install` once
-before running the test commands.
+Bun blocks Cypress's postinstall by default. If Cypress has not been installed
+on this machine yet, run `bunx cypress install` once before running the test
+commands.
 
 ## Troubleshooting
 
 **Users page shows nothing or errors in the console**
 The backend at `http://localhost:4000` is not running. Start the backend service first.
 
-**`npm run build` fails with type errors**
-Run `npm run lint` to identify type issues before building. Ensure all TypeScript errors in `src/` are resolved.
+**`bun run build` fails with type errors**
+Run `bun run lint` to identify type issues before building. Ensure all TypeScript errors in `src/` are resolved.
 
 **Port 5173 already in use**
-Another Vite dev server is running. Stop it or run `npm run dev -- --port 5174` to use a different port.
+Another Vite dev server is running. Stop it or run `bun run dev -- --port 5174` to use a different port.
 
 **Docker container starts but `/users` cannot load data**
 The frontend is served from the container, but the API request is made by your browser to `http://localhost:4000`. Start the backend service on the host before opening `/users`.
