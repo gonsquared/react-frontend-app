@@ -1,22 +1,213 @@
-.navbar {
+.app {
+  min-height: 100vh;
+  background-color: var(--page-background);
+  color: var(--page-text);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+  --page-background: #f0f0f0;
+  --page-text: #202020;
+  --sidebar-background: #e4e4e4;
+  --sidebar-border: #d0d0d0;
+  --sidebar-link: #202020;
+  --sidebar-link-hover: #d6d6d6;
+  --sidebar-button-background: #ffffff;
+  --sidebar-button-hover: #f3f3f3;
+  --toggle-background: #ffffff;
+  --toggle-border: #d8d8d8;
+  --toggle-knob: #f3c64e;
+  --toggle-sun: #6a560f;
+  --toggle-moon: #2f2f2f;
+  --table-border: #c9c9c9;
+}
+
+.darkTheme {
+  --page-background: #191919;
+  --page-text: #f2f2f2;
+  --sidebar-background: #242424;
+  --sidebar-border: #3b3b3b;
+  --sidebar-link: #f2f2f2;
+  --sidebar-link-hover: #333333;
+  --sidebar-button-background: #1b1b1b;
+  --sidebar-button-hover: #303030;
+  --toggle-background: #111111;
+  --toggle-border: #6f6f6f;
+  --toggle-knob: #d9d9d9;
+  --toggle-sun: #8d8d8d;
+  --toggle-moon: #ffffff;
+  --table-border: #555555;
+}
+
+.appBody {
   display: flex;
-  height: 3rem;
-  padding: 0 1rem;
-  background-color: #5f5f5f;
+  min-height: 100vh;
+}
 
-  .navLinks {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 12rem;
+  flex-shrink: 0;
+  padding: 1rem;
+  border-right: 1px solid var(--sidebar-border);
+  background-color: var(--sidebar-background);
 
-    a {
-      text-decoration: none;
-      color: #ffffff;
-      font-weight: 700;
+  a {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.25rem;
+    color: var(--sidebar-link);
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+      background-color: var(--sidebar-link-hover);
     }
   }
 }
 
+.sidebarTop {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brandLink {
+  flex: 1;
+}
+
+.sidebarFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.sidebarToggle,
+.floatingSidebarToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.25rem;
+  background-color: var(--sidebar-button-background);
+  color: var(--sidebar-link);
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+
+  &:hover {
+    background-color: var(--sidebar-button-hover);
+  }
+}
+
+.floatingSidebarToggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1;
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 15%);
+}
+
+.themeToggle {
+  position: relative;
+  width: 3rem;
+  height: 1.5rem;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  background-color: var(--toggle-background);
+  color: var(--page-text);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 0.2rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: var(--toggle-knob);
+    content: "";
+    transform: translateY(-50%);
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+}
+
+.sunIcon,
+.moonIcon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  line-height: 1;
+}
+
+.sunIcon {
+  left: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--toggle-sun);
+}
+
+.moonIcon {
+  right: 0.35rem;
+  font-size: 0.65rem;
+  color: var(--toggle-moon);
+}
+
+.themeToggleDark::after {
+  transform: translate(1.3rem, -50%);
+}
+
 .content {
+  flex: 1;
   padding: 1rem;
+
+  h1:first-child {
+    margin-top: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--table-border);
+    padding: 0.5rem;
+  }
+}
+
+.contentWithClosedSidebar > :first-child {
+  margin-left: 3rem;
+}
+
+@media (max-width: 640px) {
+  .appBody {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+
+  .floatingSidebarToggle {
+    top: 1rem;
+  }
 }
