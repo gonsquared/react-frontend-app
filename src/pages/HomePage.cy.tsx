@@ -1,0 +1,12 @@
+import { render, screen } from "@testing-library/react";
+import HomePage from "./HomePage";
+
+describe("HomePage", () => {
+  it("renders the home heading", () => {
+    render(<HomePage />);
+
+    expect(screen.getByRole("heading", { name: "Home Page" })).to.not.equal(
+      null,
+    );
+  });
+});

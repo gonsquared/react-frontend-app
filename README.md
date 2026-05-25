@@ -76,6 +76,8 @@ Start the backend service before using the Users page.
 | `npm run build`   | Type-check and produce a production build      |
 | `npm run preview` | Serve the production build locally             |
 | `npm run lint`    | Run ESLint across all TypeScript source files  |
+| `npm test`        | Run Cypress component tests                    |
+| `npm run test:e2e` | Run Cypress end-to-end tests                  |
 
 ## Linting
 
@@ -151,7 +153,29 @@ docker compose up -d
 
 ## Testing
 
-No test suite is configured yet.
+The app uses React Testing Library for component-level assertions and Cypress
+as the browser test runner.
+
+```bash
+# Run component tests
+npm test
+
+# Open component tests interactively
+npm run test:component:open
+
+# Run end-to-end tests
+npm run test:e2e
+
+# Open end-to-end tests interactively
+npm run test:e2e:open
+```
+
+Component specs live next to the components as `*.cy.tsx` files. End-to-end
+specs live in `cypress/e2e/`.
+
+Cypress was installed without downloading its binary during setup. If Cypress
+has not been installed on this machine yet, run `npx cypress install` once
+before running the test commands.
 
 ## Troubleshooting
 
