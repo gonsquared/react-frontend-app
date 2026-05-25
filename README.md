@@ -109,14 +109,14 @@ The Docker image builds the Vite app in a Bun stage, then serves the static `dis
 # Build the production image
 docker build -t react-frontend-app .
 
-# Run the container on http://localhost:8081
-docker run --rm -p 8081:80 react-frontend-app
+# Run the container on http://localhost:5173
+docker run --rm -p 5173:80 react-frontend-app
 
 # Or build and run with Docker Compose
 docker compose up -d
 ```
 
-The container exposes port `80`. The examples above map it to host port `8081`.
+The production container exposes port `80`. The examples above map it to host port `5173`. Docker Compose runs the Vite dev server directly on host port `5173`.
 
 The Users page still fetches `http://localhost:4000/api/users` from the browser, so the backend service must be running on the host at port `4000` when you use the container locally.
 
@@ -145,7 +145,7 @@ bun run build
 
 # Optional: build and run the production Docker image
 docker build -t react-frontend-app .
-docker run --rm -p 8081:80 react-frontend-app
+docker run --rm -p 5173:80 react-frontend-app
 
 # Or use Compose
 docker compose up -d

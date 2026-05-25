@@ -37,6 +37,11 @@
     color: var(--page-text);
   }
 
+  .fieldError {
+    border-color: #c62828;
+    box-shadow: 0 0 0 1px #c62828;
+  }
+
   button {
     padding: 0.65rem 0.9rem;
     border: 1px solid var(--table-border);
@@ -49,7 +54,21 @@
     &:hover {
       background-color: var(--sidebar-button-hover);
     }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
   }
+}
+
+.formError {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid #c62828;
+  border-radius: 0.25rem;
+  color: #c62828;
+  font-weight: 700;
 }
 
 .authLinks {

@@ -1,0 +1,41 @@
+.authPage {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.authPanel {
+  width: min(100%, 28rem);
+  padding: 1.5rem;
+  border: 1px solid var(--table-border);
+  border-radius: 0.5rem;
+  background-color: var(--page-background);
+  color: var(--page-text);
+
+  h1 {
+    margin: 0 0 1.5rem;
+  }
+
+  a {
+    color: var(--page-text);
+    font-weight: 700;
+  }
+}
+
+.formError,
+.formSuccess {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
+}
+
+.formError {
+  border: 1px solid #c62828;
+  color: #c62828;
+}
+
+.formSuccess {
+  border: 1px solid #2e7d32;
+  color: #2e7d32;
+}
