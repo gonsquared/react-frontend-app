@@ -1,0 +1,65 @@
+.authPage {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+.authPanel {
+  width: min(100%, 24rem);
+  padding: 1.5rem;
+  border: 1px solid var(--table-border);
+  border-radius: 0.5rem;
+  background-color: var(--page-background);
+  color: var(--page-text);
+
+  h1 {
+    margin: 0 0 1.5rem;
+  }
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-weight: 700;
+  }
+
+  input {
+    padding: 0.6rem;
+    border: 1px solid var(--table-border);
+    border-radius: 0.25rem;
+    background-color: var(--page-background);
+    color: var(--page-text);
+  }
+
+  button {
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--table-border);
+    border-radius: 0.25rem;
+    background-color: var(--sidebar-button-background);
+    color: var(--page-text);
+    cursor: pointer;
+    font-weight: 700;
+
+    &:hover {
+      background-color: var(--sidebar-button-hover);
+    }
+  }
+}
+
+.authLinks {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  a {
+    color: var(--page-text);
+    font-weight: 700;
+  }
+}
