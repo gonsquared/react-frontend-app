@@ -16,6 +16,10 @@ react-frontend-app/
 ├── public/             # Static assets
 ├── index.html          # HTML entry point
 ├── vite.config.ts      # Vite configuration
+├── Dockerfile          # Production Docker image build
+├── docker-compose.yml  # Docker Compose service definition
+├── nginx.conf          # Nginx static server config for Docker
+├── .dockerignore       # Files excluded from Docker build context
 ├── tsconfig.json       # TypeScript project references root
 ├── tsconfig.app.json   # TypeScript config for src files
 ├── tsconfig.node.json  # TypeScript config for Vite config file
@@ -32,6 +36,7 @@ react-frontend-app/
 | Routing    | React Router v6                   |
 | Styling    | SCSS Modules (`sass`)             |
 | Linting    | ESLint 9 (flat config)            |
+| Container  | Docker + Nginx                    |
 
 ## Prerequisites
 
@@ -94,6 +99,25 @@ npm run build
 
 Output goes to `dist/`. The build step runs `tsc -b` first to type-check, then Vite bundles for production.
 
+## Docker
+
+The Docker image builds the Vite app in a Node.js stage, then serves the static `dist/` output with Nginx.
+
+```bash
+# Build the production image
+docker build -t react-frontend-app .
+
+# Run the container on http://localhost:8081
+docker run --rm -p 8081:80 react-frontend-app
+
+# Or build and run with Docker Compose
+docker compose up -d
+```
+
+The container exposes port `80`. The examples above map it to host port `8081`.
+
+The Users page still fetches `http://localhost:4000/api/users` from the browser, so the backend service must be running on the host at port `4000` when you use the container locally.
+
 ## Architecture Notes
 
 - **Routing:** `App.tsx` owns the `<BrowserRouter>`, `<nav>`, and route layout. Two routes — `/` and `/users`.
@@ -116,6 +140,13 @@ npm run dev
 # 4. Before committing — lint and build
 npm run lint
 npm run build
+
+# Optional: build and run the production Docker image
+docker build -t react-frontend-app .
+docker run --rm -p 8081:80 react-frontend-app
+
+# Or use Compose
+docker compose up -d
 ```
 
 ## Testing
@@ -132,3 +163,6 @@ Run `npm run lint` to identify type issues before building. Ensure all TypeScrip
 
 **Port 5173 already in use**
 Another Vite dev server is running. Stop it or run `npm run dev -- --port 5174` to use a different port.
+
+**Docker container starts but `/users` cannot load data**
+The frontend is served from the container, but the API request is made by your browser to `http://localhost:4000`. Start the backend service on the host before opening `/users`.

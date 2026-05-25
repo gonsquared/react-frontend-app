@@ -1,0 +1,9 @@
+services:
+  frontend:
+    build:
+      context: .
+    image: react-frontend-app:latest
+    container_name: react-frontend-app
+    ports:
+      - "8081:80"
+    restart: unless-stopped
