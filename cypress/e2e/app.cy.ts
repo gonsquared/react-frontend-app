@@ -4,14 +4,33 @@ const users = [
     firstName: "Ada",
     lastName: "Lovelace",
     email: "ada@example.com",
+    status: "active",
   },
   {
     id: "2",
     firstName: "Grace",
     lastName: "Hopper",
     email: "grace@example.com",
+    status: "inactive",
   },
 ];
+
+const authUser = {
+  id: "64f1f77bcf86cd7994390111",
+  firstName: "Jane",
+  lastName: "Doe",
+  email: "jane@example.com",
+  status: "active",
+};
+
+const visitAuthorized = (path: string) => {
+  cy.visit(path, {
+    onBeforeLoad(window) {
+      window.localStorage.setItem("accessToken", "fake-access-token");
+      window.localStorage.setItem("authUser", JSON.stringify(authUser));
+    },
+  });
+};
 
 describe("App", () => {
   beforeEach(() => {
@@ -21,7 +40,7 @@ describe("App", () => {
   });
 
   it("navigates from the home page to the users table", () => {
-    cy.visit("/");
+    visitAuthorized("/home");
 
     cy.findByRole("heading", { name: "Home Page" }).should("be.visible");
     cy.findByRole("link", { name: "Users" }).click();
@@ -33,7 +52,7 @@ describe("App", () => {
   });
 
   it("hides the sidebar and toggles the theme", () => {
-    cy.visit("/");
+    visitAuthorized("/home");
 
     cy.findByRole("button", { name: "Hide sidebar" }).click();
     cy.findByRole("button", { name: "Show sidebar" }).should("be.visible");
@@ -51,6 +70,7 @@ describe("App", () => {
       firstName: "Katherine",
       lastName: "Johnson",
       email: "katherine@example.com",
+      status: "inactive",
     };
 
     cy.intercept("POST", "http://localhost:4000/api/users/", {
@@ -58,7 +78,7 @@ describe("App", () => {
       body: newUser,
     }).as("createUser");
 
-    cy.visit("/users");
+    visitAuthorized("/users");
     cy.wait("@getUsers");
     cy.findByRole("button", { name: "Add user" }).click();
     cy.findByLabelText("First Name").type(newUser.firstName);

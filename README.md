@@ -76,8 +76,27 @@ Start the backend service before using the Users page.
 | `bun run build`   | Type-check and produce a production build      |
 | `bun run preview` | Serve the production build locally             |
 | `bun run lint`    | Run ESLint across all TypeScript source files  |
+| `bun run precommit` | Run lint, build, component tests, and e2e tests |
 | `bun run test`    | Run Cypress component tests                    |
 | `bun run test:e2e` | Run Cypress end-to-end tests                  |
+
+## Git Hooks
+
+This repo includes a tracked pre-commit hook in `.githooks/pre-commit`.
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After that, every commit from `react-frontend-app` runs:
+
+```bash
+bun run precommit
+```
+
+The hook runs lint, build, Cypress component tests, and Cypress e2e tests. The
+Cypress runs use the `cypress/included:15.15.0` Docker image so the browser
+environment is consistent; Docker must be running before committing.
 
 ## Linting
 

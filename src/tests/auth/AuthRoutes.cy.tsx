@@ -39,35 +39,44 @@ describe("Auth routes", () => {
     window.history.pushState({}, "", "/login");
 
     cy.stub(window, "fetch")
-      .withArgs("http://localhost:4000/api/auth/login")
-      .resolves(
-        new Response(
-          JSON.stringify({
-            accessToken: "fake-access-token",
-            tokenType: "bearer",
-            expiresIn: 3600,
-            user: {
-              id: "64f1f77bcf86cd7994390111",
-              firstName: "Jane",
-              lastName: "Doe",
-              email: "jane@example.com",
-              status: "active",
-            },
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        ),
-      )
-      .withArgs("http://localhost:4000/api/users/")
-      .resolves(
-        new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .as("loginUser");
+      .callsFake((input) => {
+        const url = String(input);
+
+        if (url === "http://localhost:4000/api/auth/login") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                accessToken: "fake-access-token",
+                tokenType: "bearer",
+                expiresIn: 3600,
+                user: {
+                  id: "64f1f77bcf86cd7994390111",
+                  firstName: "Jane",
+                  lastName: "Doe",
+                  email: "jane@example.com",
+                  status: "active",
+                },
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          );
+        }
+
+        if (url === "http://localhost:4000/api/users/") {
+          return Promise.resolve(
+            new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }),
+          );
+        }
+
+        return Promise.reject(new Error(`Unexpected fetch to ${url}`));
+      })
+      .as("fetch");
 
     render(<App />);
 
@@ -75,8 +84,15 @@ describe("Auth routes", () => {
     cy.findByLabelText("Password").type("VeryStrongPassword123!");
     cy.findByRole("button", { name: "Login" }).click();
 
-    cy.get("@loginUser").should((fetchStub) => {
-      const [, options] = fetchStub.firstCall.args;
+    cy.get("@fetch").should((fetchStub) => {
+      const loginCall = fetchStub
+        .getCalls()
+        .find(
+          (call) => call.args[0] === "http://localhost:4000/api/auth/login",
+        );
+      expect(loginCall).to.not.equal(undefined);
+
+      const [, options] = loginCall!.args;
       expect(options.method).to.equal("POST");
       expect(options.headers).to.deep.equal({
         "Content-Type": "application/json",
@@ -86,22 +102,18 @@ describe("Auth routes", () => {
         password: "VeryStrongPassword123!",
       });
     });
-    cy.wrap(localStorage.getItem("accessToken")).should(
-      "equal",
-      "fake-access-token",
-    );
-    cy.wrap(localStorage.getItem("tokenType")).should("equal", "bearer");
-    cy.wrap(JSON.parse(localStorage.getItem("authUser") || "{}")).should(
-      "deep.equal",
-      {
+    cy.location("pathname").should("equal", "/users");
+    cy.wrap(null).should(() => {
+      expect(localStorage.getItem("accessToken")).to.equal("fake-access-token");
+      expect(localStorage.getItem("tokenType")).to.equal("bearer");
+      expect(JSON.parse(localStorage.getItem("authUser") || "{}")).to.deep.equal({
         id: "64f1f77bcf86cd7994390111",
         firstName: "Jane",
         lastName: "Doe",
         email: "jane@example.com",
         status: "active",
-      },
-    );
-    cy.location("pathname").should("equal", "/users");
+      });
+    });
   });
 
   it("shows invalid credential errors on the login form", () => {
