@@ -389,6 +389,210 @@ describe("Auth routes", () => {
     cy.findByRole("columnheader", { name: "Status" }).should("exist");
     cy.findByRole("cell", { name: "Release checklist" }).should("exist");
     cy.findByRole("cell", { name: "Published" }).should("exist");
+    cy.findByRole("link", { name: "Add note" }).should(
+      "have.attr",
+      "href",
+      "/my-notes/new",
+    );
+    cy.findByRole("row", { name: /Release checklist/i }).click();
+    cy.location("pathname").should("equal", "/my-notes/note-1");
+  });
+
+  it("creates a draft note from the my notes form", () => {
+    window.history.pushState({}, "", "/my-notes/new");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own", "manage_own_notes"],
+      }),
+    );
+
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/notes/")
+      .resolves(
+        new Response(
+          JSON.stringify({
+            id: "note-2",
+            title: "Draft idea",
+            contents: "<p>Draft body</p>",
+            status: "not published",
+            user: "64f1f77bcf86cd7994390111",
+            createdAt: "2026-05-24T10:00:00Z",
+            updatedAt: "2026-05-25T11:30:00Z",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .as("createDraftNote");
+
+    render(<App />);
+
+    cy.findByRole("heading", { name: "New Note" }).should("exist");
+    cy.findByLabelText("Title").type("Draft idea");
+    cy.findByLabelText("Contents").type("Draft body");
+    cy.findByRole("button", { name: "Save as draft" }).click();
+
+    cy.get("@createDraftNote").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.method).to.equal("POST");
+      expect(options.headers).to.deep.equal({
+        "Content-Type": "application/json",
+        Authorization: "Bearer fake-access-token",
+      });
+      expect(JSON.parse(options.body)).to.deep.equal({
+        title: "Draft idea",
+        contents: "Draft body",
+        status: "not published",
+      });
+    });
+    cy.location("pathname").should("equal", "/my-notes");
+  });
+
+  it("uses a modal confirmation before publishing a new note", () => {
+    window.history.pushState({}, "", "/my-notes/new");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own", "manage_own_notes"],
+      }),
+    );
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/notes/")
+      .resolves(
+        new Response(
+          JSON.stringify({
+            id: "note-3",
+            title: "Published idea",
+            contents: "<strong>Published body</strong>",
+            status: "published",
+            user: "64f1f77bcf86cd7994390111",
+            createdAt: "2026-05-24T10:00:00Z",
+            updatedAt: "2026-05-25T11:30:00Z",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .as("createPublishedNote");
+
+    render(<App />);
+
+    cy.findByLabelText("Title").type("Published idea");
+    cy.findByLabelText("Contents").type("Published body");
+    cy.findByRole("button", { name: "Save" }).click();
+
+    cy.findByRole("dialog", { name: "Publish note?" }).should("exist");
+    cy.findByText("This will make the note visible as published.").should(
+      "exist",
+    );
+    cy.findByRole("button", { name: "Cancel" }).click();
+    cy.findByRole("dialog", { name: "Publish note?" }).should("not.exist");
+    cy.get("@createPublishedNote").should("not.have.been.called");
+
+    cy.findByRole("button", { name: "Save" }).click();
+    cy.findByRole("dialog", { name: "Publish note?" }).should("exist");
+    cy.findByRole("button", { name: "Publish" }).click();
+
+    cy.get("@createPublishedNote").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.method).to.equal("POST");
+      expect(JSON.parse(options.body)).to.deep.equal({
+        title: "Published idea",
+        contents: "Published body",
+        status: "published",
+      });
+    });
+  });
+
+  it("loads and updates an existing my note", () => {
+    window.history.pushState({}, "", "/my-notes/note-1");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own", "manage_own_notes"],
+      }),
+    );
+    cy.stub(window, "fetch")
+      .callsFake((input) => {
+        const url = String(input);
+
+        if (url === "http://localhost:4000/api/notes/note-1") {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                id: "note-1",
+                title: "Release checklist",
+                contents: "<p>Ship the notes form</p>",
+                status: "not published",
+                user: "64f1f77bcf86cd7994390111",
+                createdAt: "2026-05-24T10:00:00Z",
+                updatedAt: "2026-05-25T11:30:00Z",
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          );
+        }
+
+        return Promise.reject(new Error(`Unexpected fetch to ${url}`));
+      })
+      .as("noteRequests");
+
+    render(<App />);
+
+    cy.findByRole("heading", { name: "Edit Note" }).should("exist");
+    cy.findByLabelText("Title").should("have.value", "Release checklist");
+    cy.findByLabelText("Contents").should("contain.text", "Ship the notes form");
+    cy.findByLabelText("Title").clear().type("Release checklist updated");
+    cy.findByRole("button", { name: "Save" }).click();
+    cy.findByRole("dialog", { name: "Publish note?" }).should("exist");
+    cy.findByRole("button", { name: "Publish" }).click();
+
+    cy.get("@noteRequests").should((fetchStub) => {
+      const updateCall = fetchStub
+        .getCalls()
+        .find((call) => call.args[1]?.method === "PUT");
+      expect(updateCall).to.not.equal(undefined);
+      const [, options] = updateCall!.args;
+      expect(options.headers).to.deep.equal({
+        "Content-Type": "application/json",
+        Authorization: "Bearer fake-access-token",
+      });
+      expect(JSON.parse(options.body)).to.deep.equal({
+        title: "Release checklist updated",
+        contents: "<p>Ship the notes form</p>",
+        status: "published",
+      });
+    });
+    cy.location("pathname").should("equal", "/my-notes");
   });
 
   it("logs out from the sidebar and redirects to login", () => {
@@ -456,7 +660,7 @@ describe("Auth routes", () => {
     expect(screen.getByText("Manage own notes")).to.not.equal(null);
   });
 
-  it("renders the placeholder notes page for admin users", () => {
+  it("renders all notes for admins with manage notes permission", () => {
     window.history.pushState({}, "", "/notes");
     localStorage.setItem("accessToken", "fake-access-token");
     localStorage.setItem(
@@ -476,10 +680,58 @@ describe("Auth routes", () => {
         ],
       }),
     );
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/notes/")
+      .resolves(
+        new Response(
+          JSON.stringify([
+            {
+              id: "note-1",
+              title: "Admin release note",
+              contents: "<p>Ship it</p>",
+              status: "published",
+              user: "64f1f77bcf86cd7994390111",
+              createdAt: "2026-05-24T10:00:00Z",
+              updatedAt: "2026-05-25T11:30:00Z",
+            },
+            {
+              id: "note-2",
+              title: "Another user's draft",
+              contents: "<p>Keep writing</p>",
+              status: "not published",
+              user: "64f1f77bcf86cd7994390222",
+              createdAt: "2026-05-24T10:00:00Z",
+              updatedAt: "2026-05-26T11:30:00Z",
+            },
+          ]),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .as("fetchAllNotes");
 
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Notes" })).to.not.equal(null);
+    cy.findByRole("heading", { name: "Notes" }).should("exist");
+    cy.get("@fetchAllNotes").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.headers).to.deep.equal({
+        Authorization: "Bearer fake-access-token",
+      });
+    });
+    cy.findByRole("columnheader", { name: "Title" }).should("exist");
+    cy.findByRole("columnheader", { name: "User" }).should("exist");
+    cy.findByRole("columnheader", { name: "Status" }).should("exist");
+    cy.findByRole("columnheader", { name: "Date" }).should("exist");
+    cy.findByRole("cell", { name: "Admin release note" }).should("exist");
+    cy.findByRole("cell", { name: "64f1f77bcf86cd7994390111" }).should(
+      "exist",
+    );
+    cy.findByRole("cell", { name: "Published" }).should("exist");
+    cy.findByRole("cell", { name: "Another user's draft" }).should("exist");
+    cy.findByRole("cell", { name: "Not Published" }).should("exist");
   });
 
   it("registers a user and shows the activation email instruction", () => {

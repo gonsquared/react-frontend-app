@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import type User from "../../interfaces/User";
 import type { UserPermission } from "../../interfaces/User";
 import styles from "./MyNotesPage.module.scss";
@@ -66,6 +66,7 @@ const formatUpdatedDate = (updatedAt: string) =>
   }).format(new Date(updatedAt));
 
 export default function MyNotesPage() {
+  const navigate = useNavigate();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -115,6 +116,9 @@ export default function MyNotesPage() {
     <>
       <div className={styles.pageHeader}>
         <h1>My Notes</h1>
+        <Link className={styles.addButton} to="/my-notes/new" aria-label="Add note">
+          +
+        </Link>
       </div>
       {errorMessage ? (
         <p className={styles.errorMessage} role="alert">
@@ -133,7 +137,18 @@ export default function MyNotesPage() {
           </thead>
           <tbody>
             {notes.map((note) => (
-              <tr key={note.id}>
+              <tr
+                className={styles.noteRow}
+                key={note.id}
+                tabIndex={0}
+                onClick={() => navigate(`/my-notes/${note.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    navigate(`/my-notes/${note.id}`);
+                  }
+                }}
+              >
                 <td>{note.title}</td>
                 <td>{formatUpdatedDate(note.updatedAt)}</td>
                 <td>
