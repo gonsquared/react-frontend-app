@@ -64,6 +64,7 @@ describe("App", () => {
     cy.findByRole("button", { name: "Show sidebar" }).should("be.visible");
     cy.findByRole("button", { name: "Show sidebar" }).click();
 
+    cy.findByRole("button", { name: "Jane account menu" }).click();
     cy.findByRole("button", { name: "Toggle light and dark theme" })
       .should("have.attr", "aria-pressed", "false")
       .click()
@@ -73,6 +74,7 @@ describe("App", () => {
   it("opens the profile page from the sidebar", () => {
     visitAuthorized("/home");
 
+    cy.findByRole("button", { name: "Jane account menu" }).click();
     cy.findByRole("link", { name: "Profile" }).click();
 
     cy.location("pathname").should("equal", "/profile");

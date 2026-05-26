@@ -205,9 +205,32 @@ describe("Auth routes", () => {
     render(<App />);
 
     expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
-    expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
+    expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
+      .equal(null);
+    expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
+    cy.findByRole("button", { name: "Jane account menu" }).click();
+    cy.findByRole("button", { name: "Jane account menu" }).then(
+      ([accountMenuButton]) => {
+        cy.findByRole("link", { name: "Profile" }).then(([profileLink]) => {
+          expect(
+            accountMenuButton.compareDocumentPosition(profileLink) &
+              Node.DOCUMENT_POSITION_FOLLOWING,
+          ).to.not.equal(0);
+        });
+      },
+    );
+    cy.findByRole("link", { name: "Profile" }).should(
+      "have.attr",
       "href",
       "/profile",
+    );
+    cy.findByRole("link", { name: "Logout" }).should(
+      "have.attr",
+      "href",
+      "/login",
+    );
+    cy.findByRole("button", { name: "Toggle light and dark theme" }).should(
+      "exist",
     );
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
@@ -231,10 +254,9 @@ describe("Auth routes", () => {
     render(<App />);
 
     expect(screen.queryByRole("link", { name: "Users" })).to.equal(null);
-    expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
-      "href",
-      "/profile",
-    );
+    expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
+      .equal(null);
+    expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
 
@@ -257,6 +279,7 @@ describe("Auth routes", () => {
 
     render(<App />);
 
+    cy.findByRole("button", { name: "Jane account menu" }).click();
     cy.findByRole("link", { name: "Logout" }).click();
 
     cy.location("pathname").should("equal", "/login");

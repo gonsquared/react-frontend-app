@@ -85,25 +85,89 @@
 }
 
 .sidebarFooter {
+  position: relative;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
   margin-top: auto;
   padding-top: 1rem;
 }
 
-.sidebarAccountLinks {
+.accountMenu {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: 0.25rem;
-  margin-right: auto;
+  width: 100%;
 }
 
-.profileLink,
-.logoutLink {
+.accountMenuItem {
   width: 100%;
+  box-sizing: border-box;
+}
+
+.accountMenuTheme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.25rem;
+  color: var(--sidebar-link);
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--sidebar-link-hover);
+  }
+}
+
+.accountMenuButton {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 3rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 999px;
+  background-color: var(--sidebar-button-background);
+  color: var(--sidebar-link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+
+  &:hover {
+    background-color: var(--sidebar-button-hover);
+  }
+}
+
+.accountAvatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.accountFirstName {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountMenuCaret {
+  flex-shrink: 0;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.accountMenuCaretOpen {
+  transform: rotate(180deg);
 }
 
 .sidebarToggle,
