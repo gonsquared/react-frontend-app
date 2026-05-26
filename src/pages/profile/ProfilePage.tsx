@@ -31,6 +31,14 @@ const getRoleLabel = (role?: UserRole): string => formatLabel(role ?? "user");
 const getPermissionLabel = (permission: UserPermission): string =>
   formatLabel(permission);
 
+const getUserPermissions = (user: User): UserPermission[] => {
+  if (user.permissions) return user.permissions;
+
+  return user.role === "admin"
+    ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
+    : ["manage_own", "manage_own_notes"];
+};
+
 export default function ProfilePage() {
   const authUser = getStoredAuthUser();
 
@@ -39,10 +47,7 @@ export default function ProfilePage() {
   }
 
   const fullName = `${authUser.firstName} ${authUser.lastName}`.trim();
-  const permissions =
-    authUser.role === "admin"
-      ? ["manage_users", "manage_own"]
-      : (authUser.permissions ?? ["manage_own"]);
+  const permissions = getUserPermissions(authUser);
 
   return (
     <section className={styles.profilePage}>
@@ -66,7 +71,7 @@ export default function ProfilePage() {
           <ul className={styles.permissionList}>
             {permissions.map((permission) => (
               <li className={styles.permissionItem} key={permission}>
-                {getPermissionLabel(permission as UserPermission)}
+                {getPermissionLabel(permission)}
               </li>
             ))}
           </ul>

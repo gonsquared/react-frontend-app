@@ -57,7 +57,12 @@ describe("Auth routes", () => {
                   email: "jane@example.com",
                   status: "active",
                   role: "admin",
-                  permissions: ["manage_users", "manage_own"],
+                  permissions: [
+                    "manage_users",
+                    "manage_own",
+                    "manage_notes",
+                    "manage_own_notes",
+                  ],
                 },
               }),
               {
@@ -116,7 +121,12 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "admin",
-        permissions: ["manage_users", "manage_own"],
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
       });
     });
   });
@@ -190,7 +200,12 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "admin",
-        permissions: ["manage_users", "manage_own"],
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
       }),
     );
 
@@ -254,7 +269,7 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "user",
-        permissions: ["manage_own"],
+        permissions: ["manage_own", "manage_own_notes"],
       }),
     );
 
@@ -266,6 +281,28 @@ describe("Auth routes", () => {
       .equal(null);
     expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
+  });
+
+  it("shows notes only when the session has manage notes permission", () => {
+    window.history.pushState({}, "", "/home");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: ["manage_users", "manage_own", "manage_own_notes"],
+      }),
+    );
+
+    render(<App />);
+
+    expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
+    expect(screen.queryByRole("link", { name: "Notes" })).to.equal(null);
   });
 
   it("logs out from the sidebar and redirects to login", () => {
@@ -281,7 +318,7 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "user",
-        permissions: ["manage_own"],
+        permissions: ["manage_own", "manage_own_notes"],
       }),
     );
 
@@ -311,7 +348,12 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "admin",
-        permissions: ["manage_users", "manage_own"],
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
       }),
     );
 
@@ -324,6 +366,8 @@ describe("Auth routes", () => {
     expect(screen.getByText("Admin")).to.not.equal(null);
     expect(screen.getByText("Manage users")).to.not.equal(null);
     expect(screen.getByText("Manage own")).to.not.equal(null);
+    expect(screen.getByText("Manage notes")).to.not.equal(null);
+    expect(screen.getByText("Manage own notes")).to.not.equal(null);
   });
 
   it("renders the placeholder notes page for admin users", () => {
@@ -338,7 +382,12 @@ describe("Auth routes", () => {
         email: "jane@example.com",
         status: "active",
         role: "admin",
-        permissions: ["manage_users", "manage_own"],
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
       }),
     );
 

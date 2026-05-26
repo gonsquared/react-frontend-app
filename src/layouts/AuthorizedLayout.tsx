@@ -22,8 +22,16 @@ const getAuthorizedUser = (): User | null => {
   }
 };
 
+const getUserPermissions = (user: User): UserPermission[] => {
+  if (user.permissions) return user.permissions;
+
+  return user.role === "admin"
+    ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
+    : ["manage_own", "manage_own_notes"];
+};
+
 const hasPermission = (user: User, permission: UserPermission): boolean =>
-  user.role === "admin" || (user.permissions?.includes(permission) ?? false);
+  getUserPermissions(user).includes(permission);
 
 const avatarPlaceholder =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23d9dee7'/%3E%3Ccircle cx='24' cy='19' r='8' fill='%23747f8f'/%3E%3Cpath d='M10 42c2.7-8.6 8-13 14-13s11.3 4.4 14 13' fill='%23747f8f'/%3E%3C/svg%3E";
@@ -67,6 +75,8 @@ export default function AuthorizedLayout({
   }
 
   const canManageUsers = hasPermission(authUser, "manage_users");
+  const canManageNotes = hasPermission(authUser, "manage_notes");
+  const hasMobileNavLinks = canManageUsers || canManageNotes;
 
   return (
     <>
@@ -77,7 +87,7 @@ export default function AuthorizedLayout({
               <Link className={styles.brandLink} to="/home">
                 Home
               </Link>
-              {canManageUsers ? (
+              {hasMobileNavLinks ? (
                 <div className={styles.mobileNavMenu} ref={mobileNavMenuRef}>
                   <button
                     className={styles.mobileNavMenuButton}
@@ -101,8 +111,8 @@ export default function AuthorizedLayout({
                   </button>
                   {isMobileNavMenuOpen ? (
                     <div className={styles.mobileNavDropdown}>
-                      <Link to="/users">Users</Link>
-                      <Link to="/notes">Notes</Link>
+                      {canManageUsers ? <Link to="/users">Users</Link> : null}
+                      {canManageNotes ? <Link to="/notes">Notes</Link> : null}
                     </div>
                   ) : null}
                 </div>
@@ -116,10 +126,10 @@ export default function AuthorizedLayout({
                 ‹
               </button>
             </div>
-            {canManageUsers ? (
+            {hasMobileNavLinks ? (
               <div className={styles.desktopNavLinks}>
-                <Link to="/users">Users</Link>
-                <Link to="/notes">Notes</Link>
+                {canManageUsers ? <Link to="/users">Users</Link> : null}
+                {canManageNotes ? <Link to="/notes">Notes</Link> : null}
               </div>
             ) : null}
           </div>

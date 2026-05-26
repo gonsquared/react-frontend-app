@@ -13,7 +13,9 @@ const setStoredSession = (role: "admin" | "user" = "admin") => {
       status: "active",
       role,
       permissions:
-        role === "admin" ? ["manage_users", "manage_own"] : ["manage_own"],
+        role === "admin"
+          ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
+          : ["manage_own", "manage_own_notes"],
     }),
   );
 };
@@ -94,7 +96,7 @@ describe("UsersPage", () => {
               email: "ada@example.com",
               status: "active",
               role: "user",
-              permissions: ["manage_own"],
+              permissions: ["manage_own", "manage_own_notes"],
             },
           ]),
           {
