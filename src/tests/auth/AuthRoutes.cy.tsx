@@ -277,6 +277,10 @@ describe("Auth routes", () => {
 
     expect(screen.queryByRole("link", { name: "Users" })).to.equal(null);
     expect(screen.queryByRole("link", { name: "Notes" })).to.equal(null);
+    expect(screen.getByRole("link", { name: "My Notes" })).to.have.attr(
+      "href",
+      "/my-notes",
+    );
     expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
       .equal(null);
     expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
@@ -303,6 +307,88 @@ describe("Auth routes", () => {
 
     expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
     expect(screen.queryByRole("link", { name: "Notes" })).to.equal(null);
+    expect(screen.getByRole("link", { name: "My Notes" })).to.have.attr(
+      "href",
+      "/my-notes",
+    );
+  });
+
+  it("hides my notes when the session lacks manage own notes permission", () => {
+    window.history.pushState({}, "", "/home");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own"],
+      }),
+    );
+
+    render(<App />);
+
+    expect(screen.queryByRole("link", { name: "My Notes" })).to.equal(null);
+  });
+
+  it("renders my notes for users with manage own notes permission", () => {
+    window.history.pushState({}, "", "/my-notes");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own", "manage_own_notes"],
+      }),
+    );
+
+    cy.stub(window, "fetch")
+      .withArgs(
+        "http://localhost:4000/api/notes/by-user/64f1f77bcf86cd7994390111",
+      )
+      .resolves(
+        new Response(
+          JSON.stringify([
+            {
+              id: "note-1",
+              title: "Release checklist",
+              contents: "Ship the notes list",
+              status: "published",
+              user: "64f1f77bcf86cd7994390111",
+              createdAt: "2026-05-24T10:00:00Z",
+              updatedAt: "2026-05-25T11:30:00Z",
+            },
+          ]),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .as("fetchMyNotes");
+
+    render(<App />);
+
+    cy.findByRole("heading", { name: "My Notes" }).should("exist");
+    cy.get("@fetchMyNotes").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.headers).to.deep.equal({
+        Authorization: "Bearer fake-access-token",
+      });
+    });
+    cy.findByRole("columnheader", { name: "Title" }).should("exist");
+    cy.findByRole("columnheader", { name: "Date" }).should("exist");
+    cy.findByRole("columnheader", { name: "Status" }).should("exist");
+    cy.findByRole("cell", { name: "Release checklist" }).should("exist");
+    cy.findByRole("cell", { name: "Published" }).should("exist");
   });
 
   it("logs out from the sidebar and redirects to login", () => {

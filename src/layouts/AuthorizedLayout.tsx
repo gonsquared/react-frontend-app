@@ -76,7 +76,9 @@ export default function AuthorizedLayout({
 
   const canManageUsers = hasPermission(authUser, "manage_users");
   const canManageNotes = hasPermission(authUser, "manage_notes");
-  const hasMobileNavLinks = canManageUsers || canManageNotes;
+  const canManageOwnNotes = hasPermission(authUser, "manage_own_notes");
+  const hasMobileNavLinks =
+    canManageUsers || canManageNotes || canManageOwnNotes;
 
   return (
     <>
@@ -113,6 +115,9 @@ export default function AuthorizedLayout({
                     <div className={styles.mobileNavDropdown}>
                       {canManageUsers ? <Link to="/users">Users</Link> : null}
                       {canManageNotes ? <Link to="/notes">Notes</Link> : null}
+                      {canManageOwnNotes ? (
+                        <Link to="/my-notes">My Notes</Link>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -130,6 +135,9 @@ export default function AuthorizedLayout({
               <div className={styles.desktopNavLinks}>
                 {canManageUsers ? <Link to="/users">Users</Link> : null}
                 {canManageNotes ? <Link to="/notes">Notes</Link> : null}
+                {canManageOwnNotes ? (
+                  <Link to="/my-notes">My Notes</Link>
+                ) : null}
               </div>
             ) : null}
           </div>

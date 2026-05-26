@@ -1,0 +1,47 @@
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+  }
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 7rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.published {
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.notPublished {
+  border-color: #8a6d1d;
+  color: #8a6d1d;
+}
+
+.archived {
+  border-color: #626262;
+  color: #626262;
+}
+
+.emptyState,
+.errorMessage {
+  margin: 0;
+  font-weight: 700;
+}
+
+.errorMessage {
+  color: #c62828;
+}
