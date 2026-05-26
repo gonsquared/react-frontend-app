@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { handleUnauthorizedResponse } from "../../helpers/authSession";
 import type User from "../../interfaces/User";
 import type { UserPermission } from "../../interfaces/User";
 import styles from "./NoteFormPage.module.scss";
@@ -89,6 +90,8 @@ export default function NoteFormPage() {
           headers: getAuthHeaders(),
         });
 
+        if (handleUnauthorizedResponse(response)) return;
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.detail || "Failed to fetch note");
@@ -166,6 +169,8 @@ export default function NoteFormPage() {
           body: JSON.stringify(payload),
         },
       );
+
+      if (handleUnauthorizedResponse(response)) return;
 
       if (!response.ok) {
         const errorData = await response.json();

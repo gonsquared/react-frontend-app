@@ -188,6 +188,79 @@ describe("Auth routes", () => {
     expect(screen.queryByLabelText("Hide sidebar")).to.equal(null);
   });
 
+  it("clears an incomplete session and redirects to login", () => {
+    window.history.pushState({}, "", "/users");
+    localStorage.setItem("tokenType", "bearer");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
+      }),
+    );
+
+    render(<App />);
+
+    cy.location("pathname").should("equal", "/login");
+    cy.wrap(null).should(() => {
+      expect(localStorage.getItem("accessToken")).to.equal(null);
+      expect(localStorage.getItem("tokenType")).to.equal(null);
+      expect(localStorage.getItem("authUser")).to.equal(null);
+    });
+  });
+
+  it("logs out and redirects to login when an authorized request returns unauthorized", () => {
+    window.history.pushState({}, "", "/users");
+    localStorage.setItem("accessToken", "expired-access-token");
+    localStorage.setItem("tokenType", "bearer");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
+      }),
+    );
+
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .resolves(
+        new Response(JSON.stringify({ detail: "Invalid token" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    render(<App />);
+
+    cy.findByRole("heading", { name: "Login" }).should("exist");
+    cy.location("pathname").should("equal", "/login");
+    cy.wrap(null).should(() => {
+      expect(localStorage.getItem("accessToken")).to.equal(null);
+      expect(localStorage.getItem("tokenType")).to.equal(null);
+      expect(localStorage.getItem("authUser")).to.equal(null);
+    });
+  });
+
   it("shows the sidebar when users opens with a stored session", () => {
     window.history.pushState({}, "", "/users");
     localStorage.setItem("accessToken", "fake-access-token");

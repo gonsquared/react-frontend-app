@@ -4,6 +4,7 @@ import User, {
   type UserRole,
   type UserStatus,
 } from "../../interfaces/User";
+import { handleUnauthorizedResponse } from "../../helpers/authSession";
 import styles from "./UsersPage.module.scss";
 
 const emptyUserForm = {
@@ -162,6 +163,8 @@ export default function UsersPage() {
         },
       );
 
+      if (handleUnauthorizedResponse(response)) return;
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to save user");
@@ -204,6 +207,7 @@ export default function UsersPage() {
         const response = await fetch("http://localhost:4000/api/users/", {
           headers: getAuthHeaders(),
         });
+        if (handleUnauthorizedResponse(response)) return;
         const data = await response.json();
         setUsers(data);
       } catch (error) {

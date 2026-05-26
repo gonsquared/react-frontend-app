@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { handleUnauthorizedResponse } from "../../helpers/authSession";
 import type User from "../../interfaces/User";
 import type { UserPermission } from "../../interfaces/User";
 import styles from "./NotesPage.module.scss";
@@ -82,6 +83,8 @@ export default function NotesPage() {
         const response = await fetch("http://localhost:4000/api/notes/", {
           headers: getAuthHeaders(),
         });
+
+        if (handleUnauthorizedResponse(response)) return;
 
         if (!response.ok) {
           const errorData = await response.json();

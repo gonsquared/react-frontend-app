@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import { clearStoredSession } from "../helpers/authSession";
 import type User from "../interfaces/User";
 import type { UserPermission } from "../interfaces/User";
 import styles from "../App.module.scss";
@@ -13,11 +14,15 @@ const getAuthorizedUser = (): User | null => {
   const accessToken = localStorage.getItem("accessToken");
   const authUser = localStorage.getItem("authUser");
 
-  if (!accessToken || !authUser) return null;
+  if (!accessToken || !authUser) {
+    clearStoredSession();
+    return null;
+  }
 
   try {
     return JSON.parse(authUser) as User;
   } catch {
+    clearStoredSession();
     return null;
   }
 };
@@ -181,9 +186,7 @@ export default function AuthorizedLayout({
                   to="/login"
                   replace
                   onClick={() => {
-                    localStorage.removeItem("accessToken");
-                    localStorage.removeItem("tokenType");
-                    localStorage.removeItem("authUser");
+                    clearStoredSession();
                   }}
                 >
                   Logout
