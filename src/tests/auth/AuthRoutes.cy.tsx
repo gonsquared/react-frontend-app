@@ -55,6 +55,8 @@ describe("Auth routes", () => {
                   lastName: "Doe",
                   email: "jane@example.com",
                   status: "active",
+                  role: "admin",
+                  permissions: ["manage_users", "manage_own"],
                 },
               }),
               {
@@ -112,6 +114,8 @@ describe("Auth routes", () => {
         lastName: "Doe",
         email: "jane@example.com",
         status: "active",
+        role: "admin",
+        permissions: ["manage_users", "manage_own"],
       });
     });
   });
@@ -184,6 +188,8 @@ describe("Auth routes", () => {
         lastName: "Doe",
         email: "jane@example.com",
         status: "active",
+        role: "admin",
+        permissions: ["manage_users", "manage_own"],
       }),
     );
 
@@ -199,6 +205,36 @@ describe("Auth routes", () => {
     render(<App />);
 
     expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
+    expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
+      "href",
+      "#",
+    );
+    expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
+  });
+
+  it("hides the users sidebar link for a regular user session", () => {
+    window.history.pushState({}, "", "/home");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own"],
+      }),
+    );
+
+    render(<App />);
+
+    expect(screen.queryByRole("link", { name: "Users" })).to.equal(null);
+    expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
+      "href",
+      "#",
+    );
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
 

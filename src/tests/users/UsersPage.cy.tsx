@@ -1,8 +1,30 @@
 import { render, screen } from "@testing-library/react";
 import UsersPage from "../../pages/users/UsersPage";
 
+const setStoredSession = (role: "admin" | "user" = "admin") => {
+  localStorage.setItem("accessToken", "fake-access-token");
+  localStorage.setItem(
+    "authUser",
+    JSON.stringify({
+      id: "1",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+      status: "active",
+      role,
+      permissions:
+        role === "admin" ? ["manage_users", "manage_own"] : ["manage_own"],
+    }),
+  );
+};
+
 describe("UsersPage", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("renders users returned by the API", async () => {
+    setStoredSession("admin");
     const users = [
       {
         id: "1",
@@ -36,7 +58,60 @@ describe("UsersPage", () => {
     );
   });
 
+  it("sends the stored bearer token when fetching users", () => {
+    setStoredSession("admin");
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .resolves(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .as("fetchUsers");
+
+    render(<UsersPage />);
+
+    cy.get("@fetchUsers").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.headers).to.deep.equal({
+        Authorization: "Bearer fake-access-token",
+      });
+    });
+  });
+
+  it("hides add user controls for regular users", () => {
+    setStoredSession("user");
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .resolves(
+        new Response(
+          JSON.stringify([
+            {
+              id: "1",
+              firstName: "Ada",
+              lastName: "Lovelace",
+              email: "ada@example.com",
+              status: "active",
+              role: "user",
+              permissions: ["manage_own"],
+            },
+          ]),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      );
+
+    render(<UsersPage />);
+
+    cy.findByText("Ada").should("exist");
+    cy.findByLabelText("Add user").should("not.exist");
+  });
+
   it("renders legacy users without a status as inactive", async () => {
+    setStoredSession("admin");
     const users = [
       {
         id: "1",
@@ -62,6 +137,7 @@ describe("UsersPage", () => {
   });
 
   it("shows a success toast after creating a user", () => {
+    setStoredSession("admin");
     cy.stub(window, "fetch")
       .withArgs("http://localhost:4000/api/users/")
       .onFirstCall()
@@ -105,6 +181,7 @@ describe("UsersPage", () => {
   });
 
   it("shows a success toast after updating a user", () => {
+    setStoredSession("admin");
     const users = [
       {
         id: "1",
@@ -155,6 +232,7 @@ describe("UsersPage", () => {
   });
 
   it("shows an error toast when saving a user fails", () => {
+    setStoredSession("admin");
     cy.stub(window, "fetch")
       .withArgs("http://localhost:4000/api/users/")
       .onFirstCall()
@@ -193,6 +271,7 @@ describe("UsersPage", () => {
   });
 
   it("clears an errored field highlight when the field changes", () => {
+    setStoredSession("admin");
     cy.stub(window, "fetch")
       .withArgs("http://localhost:4000/api/users/")
       .onFirstCall()

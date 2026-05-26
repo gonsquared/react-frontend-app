@@ -86,9 +86,15 @@
 
 .sidebarFooter {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 0.75rem;
   margin-top: auto;
   padding-top: 1rem;
+}
+
+.profileLink {
+  margin-right: auto;
 }
 
 .sidebarToggle,

@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import User, { type UserStatus } from "../../interfaces/User";
+import User, {
+  type UserPermission,
+  type UserRole,
+  type UserStatus,
+} from "../../interfaces/User";
 import styles from "./UsersPage.module.scss";
 
 const emptyUserForm = {
@@ -32,6 +36,40 @@ const getUserStatus = (user: User): UserStatus => user.status ?? "inactive";
 const getStatusLabel = (status: UserStatus) =>
   status.charAt(0).toUpperCase() + status.slice(1);
 
+const getUserRole = (user: User): UserRole => user.role ?? "user";
+
+const getRoleLabel = (role: UserRole) =>
+  role.charAt(0).toUpperCase() + role.slice(1);
+
+const getStoredAccessToken = () => localStorage.getItem("accessToken");
+
+const getStoredAuthUser = (): User | null => {
+  const authUser = localStorage.getItem("authUser");
+  if (!authUser) return null;
+
+  try {
+    return JSON.parse(authUser) as User;
+  } catch {
+    return null;
+  }
+};
+
+const hasPermission = (
+  user: User | null,
+  permission: UserPermission,
+): boolean =>
+  user?.role === "admin" || (user?.permissions?.includes(permission) ?? false);
+
+const getAuthHeaders = (baseHeaders: Record<string, string> = {}) => {
+  const accessToken = getStoredAccessToken();
+  if (!accessToken) return baseHeaders;
+
+  return {
+    ...baseHeaders,
+    Authorization: `Bearer ${accessToken}`,
+  };
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +80,10 @@ export default function UsersPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [authUser] = useState<User | null>(() => getStoredAuthUser());
   const isViewingUser = selectedUser !== null;
   const canEditForm = !isViewingUser || isEditingUser;
+  const canManageUsers = hasPermission(authUser, "manage_users");
 
   const showToast = (message: string, type: ToastMessage["type"]) => {
     setToast({ message, type });
@@ -116,7 +156,7 @@ export default function UsersPage() {
         {
           method: isUpdatingUser ? "PUT" : "POST",
           headers: {
-            "Content-Type": "application/json",
+            ...getAuthHeaders({ "Content-Type": "application/json" }),
           },
           body: JSON.stringify(userForm),
         },
@@ -161,7 +201,9 @@ export default function UsersPage() {
     console.log("Fetching users data...");
     const getData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/users/");
+        const response = await fetch("http://localhost:4000/api/users/", {
+          headers: getAuthHeaders(),
+        });
         const data = await response.json();
         setUsers(data);
       } catch (error) {
@@ -203,14 +245,16 @@ export default function UsersPage() {
       ) : null}
       <div className={styles.pageHeader}>
         <h1>Users</h1>
-        <button
-          className={styles.addButton}
-          type="button"
-          aria-label="Add user"
-          onClick={openAddModal}
-        >
-          +
-        </button>
+        {canManageUsers ? (
+          <button
+            className={styles.addButton}
+            type="button"
+            aria-label="Add user"
+            onClick={openAddModal}
+          >
+            +
+          </button>
+        ) : null}
       </div>
       <table>
         <thead>
@@ -219,6 +263,7 @@ export default function UsersPage() {
             <th>Last Name</th>
             <th>Email</th>
             <th>Status</th>
+            <th>Role</th>
           </tr>
         </thead>
         <tbody>
@@ -246,6 +291,7 @@ export default function UsersPage() {
                     {getStatusLabel(status)}
                   </span>
                 </td>
+                <td>{getRoleLabel(getUserRole(user))}</td>
               </tr>
             );
           })}

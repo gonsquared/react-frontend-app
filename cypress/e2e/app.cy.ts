@@ -5,6 +5,8 @@ const users = [
     lastName: "Lovelace",
     email: "ada@example.com",
     status: "active",
+    role: "user",
+    permissions: ["manage_own"],
   },
   {
     id: "2",
@@ -12,6 +14,8 @@ const users = [
     lastName: "Hopper",
     email: "grace@example.com",
     status: "inactive",
+    role: "user",
+    permissions: ["manage_own"],
   },
 ];
 
@@ -21,6 +25,8 @@ const authUser = {
   lastName: "Doe",
   email: "jane@example.com",
   status: "active",
+  role: "admin",
+  permissions: ["manage_users", "manage_own"],
 };
 
 const visitAuthorized = (path: string) => {
@@ -71,6 +77,8 @@ describe("App", () => {
       lastName: "Johnson",
       email: "katherine@example.com",
       status: "inactive",
+      role: "user",
+      permissions: ["manage_own"],
     };
 
     cy.intercept("POST", "http://localhost:4000/api/users/", {

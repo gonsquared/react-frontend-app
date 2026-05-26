@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import type User from "../interfaces/User";
+import type { UserPermission } from "../interfaces/User";
 import styles from "../App.module.scss";
 
 type AuthorizedLayoutProps = {
@@ -7,18 +9,21 @@ type AuthorizedLayoutProps = {
   toggleTheme: () => void;
 };
 
-const hasAuthorizedSession = () => {
+const getAuthorizedUser = (): User | null => {
   const accessToken = localStorage.getItem("accessToken");
   const authUser = localStorage.getItem("authUser");
 
-  if (!accessToken || !authUser) return false;
+  if (!accessToken || !authUser) return null;
 
   try {
-    return Boolean(JSON.parse(authUser));
+    return JSON.parse(authUser) as User;
   } catch {
-    return false;
+    return null;
   }
 };
+
+const hasPermission = (user: User, permission: UserPermission): boolean =>
+  user.role === "admin" || (user.permissions?.includes(permission) ?? false);
 
 export default function AuthorizedLayout({
   isDarkTheme,
@@ -26,10 +31,13 @@ export default function AuthorizedLayout({
 }: AuthorizedLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const authUser = getAuthorizedUser();
 
-  if (!hasAuthorizedSession()) {
+  if (!authUser) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
+
+  const canManageUsers = hasPermission(authUser, "manage_users");
 
   return (
     <>
@@ -49,9 +57,12 @@ export default function AuthorizedLayout({
                 ‹
               </button>
             </div>
-            <Link to="/users">Users</Link>
+            {canManageUsers ? <Link to="/users">Users</Link> : null}
           </div>
           <div className={styles.sidebarFooter}>
+            <a className={styles.profileLink} href="#">
+              Profile
+            </a>
             <button
               className={`${styles.themeToggle} ${
                 isDarkTheme ? styles.themeToggleDark : ""
