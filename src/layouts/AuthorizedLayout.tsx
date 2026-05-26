@@ -60,9 +60,23 @@ export default function AuthorizedLayout({
             {canManageUsers ? <Link to="/users">Users</Link> : null}
           </div>
           <div className={styles.sidebarFooter}>
-            <Link className={styles.profileLink} to="/profile">
-              Profile
-            </Link>
+            <div className={styles.sidebarAccountLinks}>
+              <Link className={styles.profileLink} to="/profile">
+                Profile
+              </Link>
+              <Link
+                className={styles.logoutLink}
+                to="/login"
+                replace
+                onClick={() => {
+                  localStorage.removeItem("accessToken");
+                  localStorage.removeItem("tokenType");
+                  localStorage.removeItem("authUser");
+                }}
+              >
+                Logout
+              </Link>
+            </div>
             <button
               className={`${styles.themeToggle} ${
                 isDarkTheme ? styles.themeToggleDark : ""

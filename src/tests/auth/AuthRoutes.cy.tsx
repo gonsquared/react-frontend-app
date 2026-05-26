@@ -238,6 +238,36 @@ describe("Auth routes", () => {
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
 
+  it("logs out from the sidebar and redirects to login", () => {
+    window.history.pushState({}, "", "/home");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem("tokenType", "bearer");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "user",
+        permissions: ["manage_own"],
+      }),
+    );
+
+    render(<App />);
+
+    cy.findByRole("link", { name: "Logout" }).click();
+
+    cy.location("pathname").should("equal", "/login");
+    cy.findByRole("heading", { name: "Login" }).should("exist");
+    cy.wrap(null).should(() => {
+      expect(localStorage.getItem("accessToken")).to.equal(null);
+      expect(localStorage.getItem("tokenType")).to.equal(null);
+      expect(localStorage.getItem("authUser")).to.equal(null);
+    });
+  });
+
   it("renders the profile page with the stored session user", () => {
     window.history.pushState({}, "", "/profile");
     localStorage.setItem("accessToken", "fake-access-token");
