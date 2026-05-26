@@ -205,6 +205,10 @@ describe("Auth routes", () => {
     render(<App />);
 
     expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
+    expect(screen.getByRole("link", { name: "Notes" })).to.have.attr(
+      "href",
+      "/notes",
+    );
     expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
       .equal(null);
     expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
@@ -254,6 +258,7 @@ describe("Auth routes", () => {
     render(<App />);
 
     expect(screen.queryByRole("link", { name: "Users" })).to.equal(null);
+    expect(screen.queryByRole("link", { name: "Notes" })).to.equal(null);
     expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
       .equal(null);
     expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
@@ -316,6 +321,27 @@ describe("Auth routes", () => {
     expect(screen.getByText("Admin")).to.not.equal(null);
     expect(screen.getByText("Manage users")).to.not.equal(null);
     expect(screen.getByText("Manage own")).to.not.equal(null);
+  });
+
+  it("renders the placeholder notes page for admin users", () => {
+    window.history.pushState({}, "", "/notes");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: ["manage_users", "manage_own"],
+      }),
+    );
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Notes" })).to.not.equal(null);
   });
 
   it("registers a user and shows the activation email instruction", () => {

@@ -61,7 +61,12 @@ export default function AuthorizedLayout({
                 ‹
               </button>
             </div>
-            {canManageUsers ? <Link to="/users">Users</Link> : null}
+            {canManageUsers ? (
+              <>
+                <Link to="/users">Users</Link>
+                <Link to="/notes">Notes</Link>
+              </>
+            ) : null}
           </div>
           <div className={styles.sidebarFooter}>
             <button
