@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+import { handleUnauthorizedResponse } from "../../helpers/authSession";
 import type User from "../../interfaces/User";
 import type {
   UserPermission,
@@ -5,6 +7,9 @@ import type {
   UserStatus,
 } from "../../interfaces/User";
 import styles from "./ProfilePage.module.scss";
+
+const avatarPlaceholder =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23d9dee7'/%3E%3Ccircle cx='24' cy='19' r='8' fill='%23747f8f'/%3E%3Cpath d='M10 42c2.7-8.6 8-13 14-13s11.3 4.4 14 13' fill='%23747f8f'/%3E%3C/svg%3E";
 
 const getStoredAuthUser = (): User | null => {
   const authUser = localStorage.getItem("authUser");
@@ -16,6 +21,20 @@ const getStoredAuthUser = (): User | null => {
   } catch {
     return null;
   }
+};
+
+const getStoredAccessToken = () => localStorage.getItem("accessToken");
+
+const getAuthHeaders = (
+  baseHeaders: Record<string, string> = {},
+): Record<string, string> => {
+  const accessToken = getStoredAccessToken();
+  if (!accessToken) return baseHeaders;
+
+  return {
+    ...baseHeaders,
+    Authorization: `Bearer ${accessToken}`,
+  };
 };
 
 const formatLabel = (value: string): string => {
@@ -39,8 +58,29 @@ const getUserPermissions = (user: User): UserPermission[] => {
     : ["manage_own", "manage_own_notes"];
 };
 
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Failed to read avatar image"));
+    });
+    reader.addEventListener("error", () => {
+      reject(new Error("Failed to read avatar image"));
+    });
+    reader.readAsDataURL(file);
+  });
+
 export default function ProfilePage() {
-  const authUser = getStoredAuthUser();
+  const [authUser, setAuthUser] = useState<User | null>(() => getStoredAuthUser());
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!authUser) {
     return <p>Profile unavailable.</p>;
@@ -48,12 +88,92 @@ export default function ProfilePage() {
 
   const fullName = `${authUser.firstName} ${authUser.lastName}`.trim();
   const permissions = getUserPermissions(authUser);
+  const avatarUrl = authUser.avatarUrl || avatarPlaceholder;
+
+  const updateAvatar = async (file: File) => {
+    setUploadMessage("");
+    setUploadError("");
+    setIsUploading(true);
+
+    try {
+      const avatarDataUrl = await readFileAsDataUrl(file);
+      const response = await fetch(
+        `http://localhost:4000/api/users/${authUser.id}/avatar`,
+        {
+          method: "PATCH",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ avatarUrl: avatarDataUrl }),
+        },
+      );
+
+      if (handleUnauthorizedResponse(response)) return;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to update avatar");
+      }
+
+      const updatedUser: User = await response.json();
+      setAuthUser(updatedUser);
+      localStorage.setItem("authUser", JSON.stringify(updatedUser));
+      setUploadMessage("Avatar updated.");
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "Failed to update avatar",
+      );
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   return (
     <section className={styles.profilePage}>
       <div className={styles.profileHeader}>
         <h1>Profile</h1>
-        <p className={styles.profileName}>{fullName}</p>
+        <div className={styles.profileIdentity}>
+          <p className={styles.profileName}>{fullName}</p>
+          <button
+            className={styles.avatarButton}
+            type="button"
+            aria-label="Update avatar image"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+          >
+            <img
+              className={styles.avatarImage}
+              src={avatarUrl}
+              alt={`${fullName} avatar`}
+              width="64"
+              height="64"
+            />
+          </button>
+          <input
+            ref={fileInputRef}
+            className={styles.avatarInput}
+            type="file"
+            accept="image/*"
+            aria-label="Avatar image"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                void updateAvatar(file);
+              }
+            }}
+          />
+        </div>
+        {uploadMessage ? (
+          <p className={styles.uploadMessage} role="status">
+            {uploadMessage}
+          </p>
+        ) : null}
+        {uploadError ? (
+          <p className={styles.uploadError} role="alert">
+            {uploadError}
+          </p>
+        ) : null}
       </div>
 
       <dl className={styles.profileDetails}>

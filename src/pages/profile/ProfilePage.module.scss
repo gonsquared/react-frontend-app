@@ -6,10 +6,63 @@
   margin-bottom: 1.5rem;
 }
 
+.profileIdentity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .profileName {
   margin: 0.25rem 0 0;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.avatarButton {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  padding: 0;
+  border: 1px solid var(--table-border);
+  border-radius: 50%;
+  background-color: var(--sidebar-button-background);
+  cursor: pointer;
+  overflow: hidden;
+
+  &:hover {
+    background-color: var(--sidebar-button-hover);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+.avatarImage {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+}
+
+.avatarInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.uploadMessage,
+.uploadError {
+  margin: 0.75rem 0 0;
+  font-weight: 700;
+}
+
+.uploadError {
+  color: #c62828;
 }
 
 .profileDetails {

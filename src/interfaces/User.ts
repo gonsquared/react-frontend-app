@@ -14,6 +14,7 @@ interface User {
   status?: UserStatus;
   role?: UserRole;
   permissions?: UserPermission[];
+  avatarUrl?: string;
 }
 
 export default User;

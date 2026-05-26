@@ -731,6 +731,88 @@ describe("Auth routes", () => {
     expect(screen.getByText("Manage own")).to.not.equal(null);
     expect(screen.getByText("Manage notes")).to.not.equal(null);
     expect(screen.getByText("Manage own notes")).to.not.equal(null);
+    cy.findByRole("button", { name: "Update avatar image" }).should("exist");
+    cy.findByAltText("Jane Doe avatar")
+      .should("have.attr", "width", "64")
+      .and("have.attr", "height", "64");
+  });
+
+  it("uploads a new avatar from the profile page", () => {
+    window.history.pushState({}, "", "/profile");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: [
+          "manage_users",
+          "manage_own",
+          "manage_notes",
+          "manage_own_notes",
+        ],
+      }),
+    );
+
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/64f1f77bcf86cd7994390111/avatar")
+      .resolves(
+        new Response(
+          JSON.stringify({
+            id: "64f1f77bcf86cd7994390111",
+            firstName: "Jane",
+            lastName: "Doe",
+            email: "jane@example.com",
+            status: "active",
+            role: "admin",
+            permissions: [
+              "manage_users",
+              "manage_own",
+              "manage_notes",
+              "manage_own_notes",
+            ],
+            avatarUrl: "data:image/png;base64,ZmFrZS1pbWFnZQ==",
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      )
+      .as("updateAvatar");
+
+    render(<App />);
+
+    cy.findByLabelText("Avatar image").selectFile(
+      {
+        contents: Cypress.Buffer.from("fake-image"),
+        fileName: "avatar.png",
+        mimeType: "image/png",
+      },
+      { force: true },
+    );
+
+    cy.get("@updateAvatar").should((fetchStub) => {
+      const [, options] = fetchStub.firstCall.args;
+      expect(options.method).to.equal("PATCH");
+      expect(options.headers).to.deep.equal({
+        "Content-Type": "application/json",
+        Authorization: "Bearer fake-access-token",
+      });
+      expect(JSON.parse(options.body).avatarUrl).to.match(
+        /^data:image\/png;base64,/,
+      );
+    });
+    cy.findByRole("status").should("contain.text", "Avatar updated.");
+    cy.wrap(null).should(() => {
+      expect(JSON.parse(localStorage.getItem("authUser") || "{}")).to.include({
+        avatarUrl: "data:image/png;base64,ZmFrZS1pbWFnZQ==",
+      });
+    });
   });
 
   it("renders all notes for admins with manage notes permission", () => {
