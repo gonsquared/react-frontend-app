@@ -3,6 +3,7 @@ import App from "../../App";
 
 describe("Auth routes", () => {
   beforeEach(() => {
+    cy.viewport(1000, 660);
     localStorage.clear();
   });
 
@@ -236,6 +237,8 @@ describe("Auth routes", () => {
     cy.findByRole("button", { name: "Toggle light and dark theme" }).should(
       "exist",
     );
+    cy.findByRole("heading", { name: "Users" }).click();
+    cy.findByRole("link", { name: "Profile" }).should("not.exist");
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
 

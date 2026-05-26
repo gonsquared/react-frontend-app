@@ -83,6 +83,24 @@ describe("App", () => {
     cy.findByText("jane@example.com").should("be.visible");
   });
 
+  it("uses inline dropdown menus on mobile", () => {
+    cy.viewport(390, 660);
+    visitAuthorized("/home");
+
+    cy.findByRole("link", { name: "Home" }).should("be.visible");
+    cy.findByRole("button", { name: "Menu" }).click();
+    cy.findByRole("link", { name: "Users" }).should("be.visible");
+    cy.findByRole("link", { name: "Notes" }).should("be.visible");
+    cy.get("main").click("bottomRight");
+    cy.findByRole("link", { name: "Users" }).should("not.exist");
+
+    cy.findByRole("button", { name: "Jane account menu" }).click();
+    cy.findByRole("link", { name: "Profile" }).should("be.visible");
+    cy.findByRole("link", { name: "Logout" }).should("be.visible");
+    cy.get("main").click("bottomRight");
+    cy.findByRole("link", { name: "Profile" }).should("not.exist");
+  });
+
   it("adds a user through the modal", () => {
     const newUser = {
       id: "3",

@@ -84,6 +84,48 @@
   flex: 1;
 }
 
+.desktopNavLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mobileNavMenu {
+  position: relative;
+  display: none;
+}
+
+.mobileNavMenuButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.25rem;
+  background-color: var(--sidebar-button-background);
+  color: var(--sidebar-link);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+
+  &:hover {
+    background-color: var(--sidebar-button-hover);
+  }
+}
+
+.mobileNavDropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 2;
+  width: 10rem;
+  padding: 0.35rem;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.5rem;
+  background-color: var(--sidebar-background);
+  box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 12%);
+}
+
 .sidebarFooter {
   position: relative;
   display: flex;
@@ -281,9 +323,80 @@
   }
 
   .sidebar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
     width: auto;
+    padding: 0.75rem 1rem;
     border-right: 0;
     border-bottom: 1px solid var(--sidebar-border);
+  }
+
+  .sidebarTop {
+    min-width: 0;
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sidebarHeader {
+    flex: 1;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+
+  .brandLink {
+    flex: 0 0 auto;
+  }
+
+  .desktopNavLinks,
+  .sidebarToggle {
+    display: none;
+  }
+
+  .mobileNavMenu {
+    display: block;
+  }
+
+  .sidebarFooter {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .accountMenuButton {
+    justify-content: center;
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.25rem;
+  }
+
+  .accountFirstName,
+  .accountMenuButton .accountMenuCaret {
+    display: none;
+  }
+
+  .accountAvatar {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .accountMenu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    z-index: 2;
+    width: 11rem;
+    padding: 0.35rem;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 0.5rem;
+    background-color: var(--sidebar-background);
+    box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 12%);
+  }
+
+  .content {
+    padding: 1rem;
   }
 
   .floatingSidebarToggle {

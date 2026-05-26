@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import type User from "../interfaces/User";
 import type { UserPermission } from "../interfaces/User";
@@ -34,8 +34,33 @@ export default function AuthorizedLayout({
 }: AuthorizedLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isMobileNavMenuOpen, setIsMobileNavMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileNavMenuRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
   const authUser = getAuthorizedUser();
+
+  useEffect(() => {
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      const eventTarget = event.target;
+
+      if (!(eventTarget instanceof Node)) return;
+
+      if (!accountMenuRef.current?.contains(eventTarget)) {
+        setIsAccountMenuOpen(false);
+      }
+
+      if (!mobileNavMenuRef.current?.contains(eventTarget)) {
+        setIsMobileNavMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+    };
+  }, []);
 
   if (!authUser) {
     return <Navigate to="/login" replace state={{ from: location }} />;
@@ -52,6 +77,36 @@ export default function AuthorizedLayout({
               <Link className={styles.brandLink} to="/home">
                 Home
               </Link>
+              {canManageUsers ? (
+                <div className={styles.mobileNavMenu} ref={mobileNavMenuRef}>
+                  <button
+                    className={styles.mobileNavMenuButton}
+                    type="button"
+                    aria-expanded={isMobileNavMenuOpen}
+                    onClick={() =>
+                      setIsMobileNavMenuOpen(
+                        (currentNavMenuState) => !currentNavMenuState,
+                      )
+                    }
+                  >
+                    <span>Menu</span>
+                    <span
+                      className={`${styles.accountMenuCaret} ${
+                        isMobileNavMenuOpen ? styles.accountMenuCaretOpen : ""
+                      }`}
+                      aria-hidden="true"
+                    >
+                      ▾
+                    </span>
+                  </button>
+                  {isMobileNavMenuOpen ? (
+                    <div className={styles.mobileNavDropdown}>
+                      <Link to="/users">Users</Link>
+                      <Link to="/notes">Notes</Link>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               <button
                 className={styles.sidebarToggle}
                 type="button"
@@ -62,13 +117,13 @@ export default function AuthorizedLayout({
               </button>
             </div>
             {canManageUsers ? (
-              <>
+              <div className={styles.desktopNavLinks}>
                 <Link to="/users">Users</Link>
                 <Link to="/notes">Notes</Link>
-              </>
+              </div>
             ) : null}
           </div>
-          <div className={styles.sidebarFooter}>
+          <div className={styles.sidebarFooter} ref={accountMenuRef}>
             <button
               className={styles.accountMenuButton}
               type="button"
