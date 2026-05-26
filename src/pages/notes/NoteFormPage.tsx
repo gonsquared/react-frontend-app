@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ClipboardEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
-import { handleUnauthorizedResponse } from "../../helpers/authSession";
+import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
+import { useDialogFocusTrap } from "../../helpers/useDialogFocusTrap";
+import {
+  getAuthHeaders,
+  getStoredAuthUser,
+  handleUnauthorizedResponse,
+  hasPermission,
+} from "../../helpers/authSession";
 import type User from "../../interfaces/User";
-import type { UserPermission } from "../../interfaces/User";
 import styles from "./NoteFormPage.module.scss";
 
 type NoteStatus = "published" | "not published" | "archived";
@@ -23,52 +30,68 @@ type NotePayload = {
   status: Exclude<NoteStatus, "archived">;
 };
 
-const getStoredAccessToken = () => localStorage.getItem("accessToken");
+const allowedEditorTags = new Set([
+  "B",
+  "BR",
+  "DIV",
+  "EM",
+  "I",
+  "LI",
+  "OL",
+  "P",
+  "SPAN",
+  "STRONG",
+  "UL",
+]);
 
-const getStoredAuthUser = (): User | null => {
-  const authUser = localStorage.getItem("authUser");
-  if (!authUser) return null;
-
-  try {
-    return JSON.parse(authUser) as User;
-  } catch {
-    return null;
-  }
-};
-
-const getUserPermissions = (user: User): UserPermission[] => {
-  if (user.permissions) return user.permissions;
-
-  return user.role === "admin"
-    ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
-    : ["manage_own", "manage_own_notes"];
-};
-
-const hasPermission = (user: User, permission: UserPermission): boolean =>
-  getUserPermissions(user).includes(permission);
-
-const getAuthHeaders = (
-  baseHeaders: Record<string, string> = {},
-): Record<string, string> => {
-  const accessToken = getStoredAccessToken();
-  if (!accessToken) return baseHeaders;
-
-  return {
-    ...baseHeaders,
-    Authorization: `Bearer ${accessToken}`,
-  };
-};
+const blockedEditorTags = new Set(["IFRAME", "OBJECT", "SCRIPT", "STYLE"]);
 
 const getTextFromHtml = (html: string) => {
   const element = document.createElement("div");
-  element.innerHTML = html;
+  element.innerHTML = sanitizeEditorHtml(html);
   return element.textContent?.trim() ?? "";
+};
+
+const unwrapElement = (element: Element) => {
+  const parent = element.parentNode;
+  if (!parent) return;
+
+  while (element.firstChild) {
+    parent.insertBefore(element.firstChild, element);
+  }
+
+  parent.removeChild(element);
+};
+
+const sanitizeEditorHtml = (html: string) => {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  [...template.content.querySelectorAll("*")].forEach((element) => {
+    if (blockedEditorTags.has(element.tagName)) {
+      element.remove();
+      return;
+    }
+
+    if (!allowedEditorTags.has(element.tagName)) {
+      unwrapElement(element);
+      return;
+    }
+
+    [...element.attributes].forEach((attribute) => {
+      element.removeAttribute(attribute.name);
+    });
+  });
+
+  return template.innerHTML;
 };
 
 export default function NoteFormPage() {
   const { noteId } = useParams();
   const navigate = useNavigate();
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const publishModalRef = useRef<HTMLDivElement | null>(null);
+  const publishCancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const [authUser] = useState<User | null>(() => getStoredAuthUser());
   const [title, setTitle] = useState("");
   const [contents, setContents] = useState("");
@@ -86,20 +109,25 @@ export default function NoteFormPage() {
 
     const getNote = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/api/notes/${noteId}`, {
+        const response = await fetch(getApiUrl(`/api/notes/${noteId}`), {
           headers: getAuthHeaders(),
         });
 
         if (handleUnauthorizedResponse(response)) return;
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || "Failed to fetch note");
+          const errorData = await readJsonResponse<{ detail?: unknown }>(
+            response,
+          );
+          throw new Error(
+            getErrorMessage(errorData?.detail, "Failed to fetch note"),
+          );
         }
 
-        const note: Note = await response.json();
+        const note = await readJsonResponse<Note>(response);
+        if (!note) throw new Error("Failed to fetch note");
         setTitle(note.title);
-        setContents(note.contents);
+        setContents(sanitizeEditorHtml(note.contents));
       } catch (error) {
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to fetch note",
@@ -118,8 +146,19 @@ export default function NoteFormPage() {
     }
   }, [contents, loading]);
 
+  const closePublishModal = useCallback(() => {
+    setIsPublishModalOpen(false);
+  }, []);
+
+  useDialogFocusTrap({
+    isOpen: isPublishModalOpen,
+    dialogRef: publishModalRef,
+    initialFocusRef: publishCancelButtonRef,
+    onEscape: closePublishModal,
+  });
+
   const updateContents = () => {
-    setContents(editorRef.current?.innerHTML ?? "");
+    setContents(sanitizeEditorHtml(editorRef.current?.innerHTML ?? ""));
   };
 
   const formatContents = (command: "bold" | "italic" | "insertUnorderedList") => {
@@ -151,6 +190,13 @@ export default function NoteFormPage() {
     }
   };
 
+  const handleEditorPaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    updateContents();
+  };
+
   const saveNote = async (status: NotePayload["status"]) => {
     setErrorMessage("");
     const payload = getNotePayload(status);
@@ -161,8 +207,8 @@ export default function NoteFormPage() {
     try {
       const response = await fetch(
         isEditing
-          ? `http://localhost:4000/api/notes/${noteId}`
-          : "http://localhost:4000/api/notes/",
+          ? getApiUrl(`/api/notes/${noteId}`)
+          : getApiUrl("/api/notes/"),
         {
           method: isEditing ? "PUT" : "POST",
           headers: getAuthHeaders({ "Content-Type": "application/json" }),
@@ -173,8 +219,12 @@ export default function NoteFormPage() {
       if (handleUnauthorizedResponse(response)) return;
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to save note");
+        const errorData = await readJsonResponse<{ detail?: unknown }>(
+          response,
+        );
+        throw new Error(
+          getErrorMessage(errorData?.detail, "Failed to save note"),
+        );
       }
 
       navigate("/my-notes");
@@ -257,8 +307,10 @@ export default function NoteFormPage() {
             className={styles.editor}
             role="textbox"
             aria-labelledby="note-contents-label"
+            aria-multiline="true"
             contentEditable={!saving}
             onInput={updateContents}
+            onPaste={handleEditorPaste}
             suppressContentEditableWarning
           />
         </div>
@@ -279,6 +331,7 @@ export default function NoteFormPage() {
       {isPublishModalOpen ? (
         <div className={styles.modalOverlay} role="presentation">
           <div
+            ref={publishModalRef}
             className={styles.modal}
             role="dialog"
             aria-modal="true"
@@ -292,6 +345,7 @@ export default function NoteFormPage() {
             </div>
             <div className={styles.modalActions}>
               <button
+                ref={publishCancelButtonRef}
                 type="button"
                 onClick={() => setIsPublishModalOpen(false)}
                 disabled={saving}

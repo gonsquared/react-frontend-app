@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { handleUnauthorizedResponse } from "../../helpers/authSession";
+import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
+import {
+  getAuthHeaders,
+  getStoredAuthUser,
+  handleUnauthorizedResponse,
+  hasPermission,
+} from "../../helpers/authSession";
 import type User from "../../interfaces/User";
-import type { UserPermission } from "../../interfaces/User";
 import styles from "./MyNotesPage.module.scss";
 
 type NoteStatus = "published" | "not published" | "archived";
@@ -15,39 +20,6 @@ type Note = {
   user: string;
   createdAt: string;
   updatedAt: string;
-};
-
-const getStoredAccessToken = () => localStorage.getItem("accessToken");
-
-const getStoredAuthUser = (): User | null => {
-  const authUser = localStorage.getItem("authUser");
-  if (!authUser) return null;
-
-  try {
-    return JSON.parse(authUser) as User;
-  } catch {
-    return null;
-  }
-};
-
-const getUserPermissions = (user: User): UserPermission[] => {
-  if (user.permissions) return user.permissions;
-
-  return user.role === "admin"
-    ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
-    : ["manage_own", "manage_own_notes"];
-};
-
-const hasPermission = (user: User, permission: UserPermission): boolean =>
-  getUserPermissions(user).includes(permission);
-
-const getAuthHeaders = (): Record<string, string> => {
-  const accessToken = getStoredAccessToken();
-  if (!accessToken) return {};
-
-  return {
-    Authorization: `Bearer ${accessToken}`,
-  };
 };
 
 const getStatusLabel = (status: NoteStatus) =>
@@ -82,7 +54,7 @@ export default function MyNotesPage() {
     const getMyNotes = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/notes/by-user/${authUser.id}`,
+          getApiUrl(`/api/notes/by-user/${authUser.id}`),
           {
             headers: getAuthHeaders(),
           },
@@ -91,11 +63,15 @@ export default function MyNotesPage() {
         if (handleUnauthorizedResponse(response)) return;
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || "Failed to fetch notes");
+          const errorData = await readJsonResponse<{ detail?: unknown }>(
+            response,
+          );
+          throw new Error(
+            getErrorMessage(errorData?.detail, "Failed to fetch notes"),
+          );
         }
 
-        const data: Note[] = await response.json();
+        const data = (await readJsonResponse<Note[]>(response)) ?? [];
         setNotes(data);
       } catch (error) {
         setErrorMessage(
@@ -130,7 +106,7 @@ export default function MyNotesPage() {
       ) : notes.length === 0 ? (
         <p className={styles.emptyState}>No notes found.</p>
       ) : (
-        <table>
+        <table aria-label="My notes">
           <thead>
             <tr>
               <th>Title</th>
@@ -140,19 +116,16 @@ export default function MyNotesPage() {
           </thead>
           <tbody>
             {notes.map((note) => (
-              <tr
-                className={styles.noteRow}
-                key={note.id}
-                tabIndex={0}
-                onClick={() => navigate(`/my-notes/${note.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    navigate(`/my-notes/${note.id}`);
-                  }
-                }}
-              >
-                <td>{note.title}</td>
+              <tr className={styles.noteRow} key={note.id}>
+                <td>
+                  <button
+                    className={styles.rowButton}
+                    type="button"
+                    onClick={() => navigate(`/my-notes/${note.id}`)}
+                  >
+                    {note.title}
+                  </button>
+                </td>
                 <td>{formatUpdatedDate(note.updatedAt)}</td>
                 <td>
                   <span

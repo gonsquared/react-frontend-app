@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
-import User, {
-  type UserPermission,
-  type UserRole,
-  type UserStatus,
-} from "../../interfaces/User";
-import { handleUnauthorizedResponse } from "../../helpers/authSession";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type User from "../../interfaces/User";
+import type { UserRole, UserStatus } from "../../interfaces/User";
+import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
+import { useDialogFocusTrap } from "../../helpers/useDialogFocusTrap";
+import {
+  getAuthHeaders,
+  getStoredAuthUser,
+  handleUnauthorizedResponse,
+  hasPermission,
+} from "../../helpers/authSession";
 import styles from "./UsersPage.module.scss";
 
 const emptyUserForm = {
@@ -42,35 +46,6 @@ const getUserRole = (user: User): UserRole => user.role ?? "user";
 const getRoleLabel = (role: UserRole) =>
   role.charAt(0).toUpperCase() + role.slice(1);
 
-const getStoredAccessToken = () => localStorage.getItem("accessToken");
-
-const getStoredAuthUser = (): User | null => {
-  const authUser = localStorage.getItem("authUser");
-  if (!authUser) return null;
-
-  try {
-    return JSON.parse(authUser) as User;
-  } catch {
-    return null;
-  }
-};
-
-const hasPermission = (
-  user: User | null,
-  permission: UserPermission,
-): boolean =>
-  user?.role === "admin" || (user?.permissions?.includes(permission) ?? false);
-
-const getAuthHeaders = (baseHeaders: Record<string, string> = {}) => {
-  const accessToken = getStoredAccessToken();
-  if (!accessToken) return baseHeaders;
-
-  return {
-    ...baseHeaders,
-    Authorization: `Bearer ${accessToken}`,
-  };
-};
-
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +56,10 @@ export default function UsersPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const [authUser] = useState<User | null>(() => getStoredAuthUser());
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const isViewingUser = selectedUser !== null;
   const canEditForm = !isViewingUser || isEditingUser;
   const canManageUsers = hasPermission(authUser, "manage_users");
@@ -90,13 +68,13 @@ export default function UsersPage() {
     setToast({ message, type });
   };
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedUser(null);
     setIsEditingUser(false);
     setUserForm(emptyUserForm);
     setFieldErrors({});
-  };
+  }, []);
 
   const openAddModal = () => {
     setSelectedUser(null);
@@ -152,8 +130,8 @@ export default function UsersPage() {
       const isUpdatingUser = selectedUser !== null;
       const response = await fetch(
         isUpdatingUser
-          ? `http://localhost:4000/api/users/${selectedUser.id}`
-          : "http://localhost:4000/api/users/",
+          ? getApiUrl(`/api/users/${selectedUser.id}`)
+          : getApiUrl("/api/users/"),
         {
           method: isUpdatingUser ? "PUT" : "POST",
           headers: {
@@ -166,11 +144,16 @@ export default function UsersPage() {
       if (handleUnauthorizedResponse(response)) return;
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to save user");
+        const errorData = await readJsonResponse<{ detail?: unknown }>(
+          response,
+        );
+        throw new Error(
+          getErrorMessage(errorData?.detail, "Failed to save user"),
+        );
       }
 
-      const savedUser: User = await response.json();
+      const savedUser = await readJsonResponse<User>(response);
+      if (!savedUser) throw new Error("Failed to save user");
       setUsers((currentUsers) =>
         isUpdatingUser
           ? currentUsers.map((user) =>
@@ -201,27 +184,35 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    console.log("Fetching users data...");
     const getData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/users/", {
+        setErrorMessage("");
+        const response = await fetch(getApiUrl("/api/users/"), {
           headers: getAuthHeaders(),
         });
         if (handleUnauthorizedResponse(response)) return;
-        const data = await response.json();
+
+        if (!response.ok) {
+          const errorData = await readJsonResponse<{ detail?: unknown }>(
+            response,
+          );
+          throw new Error(
+            getErrorMessage(errorData?.detail, "Failed to fetch users"),
+          );
+        }
+
+        const data = (await readJsonResponse<User[]>(response)) ?? [];
         setUsers(data);
       } catch (error) {
-        console.error("Failed to fetch users:", error);
+        setErrorMessage(
+          error instanceof Error ? error.message : "Failed to fetch users",
+        );
       } finally {
         setLoading(false);
       }
     };
     getData();
   }, []);
-
-  useEffect(() => {
-    console.log("Users data updated:", users);
-  }, [users]);
 
   useEffect(() => {
     if (!toast) return;
@@ -234,6 +225,13 @@ export default function UsersPage() {
       window.clearTimeout(timeoutId);
     };
   }, [toast]);
+
+  useDialogFocusTrap({
+    isOpen: isModalOpen,
+    dialogRef: modalRef,
+    initialFocusRef: closeButtonRef,
+    onEscape: isSaving ? undefined : closeModal,
+  });
 
   if (loading) return <p>Loading users...</p>;
 
@@ -260,50 +258,58 @@ export default function UsersPage() {
           </button>
         ) : null}
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => {
-            const status = getUserStatus(user);
+      {errorMessage ? (
+        <p className={styles.errorMessage} role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+      {!errorMessage && users.length === 0 ? (
+        <p className={styles.emptyState}>No users found.</p>
+      ) : null}
+      {!errorMessage && users.length > 0 ? (
+        <table aria-label="Users">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => {
+              const status = getUserStatus(user);
 
-            return (
-              <tr
-                className={styles.userRow}
-                key={user.id}
-                tabIndex={0}
-                onClick={() => openUserModal(user)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openUserModal(user);
-                  }
-                }}
-              >
-                <td>{user.firstName}</td>
-                <td>{user.lastName}</td>
-                <td>{user.email}</td>
-                <td>
-                  <span className={`${styles.statusBadge} ${styles[status]}`}>
-                    {getStatusLabel(status)}
-                  </span>
-                </td>
-                <td>{getRoleLabel(getUserRole(user))}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+              return (
+                <tr className={styles.userRow} key={user.id}>
+                  <td>
+                    <button
+                      className={styles.rowButton}
+                      type="button"
+                      onClick={() => openUserModal(user)}
+                    >
+                      {user.firstName}
+                    </button>
+                  </td>
+                  <td>{user.lastName}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`${styles.statusBadge} ${styles[status]}`}>
+                      {getStatusLabel(status)}
+                    </span>
+                  </td>
+                  <td>{getRoleLabel(getUserRole(user))}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : null}
       {isModalOpen ? (
         <div className={styles.modalOverlay} role="presentation">
           <div
+            ref={modalRef}
             className={styles.modal}
             role="dialog"
             aria-modal="true"
@@ -318,6 +324,7 @@ export default function UsersPage() {
                   : "Add User"}
               </h2>
               <button
+                ref={closeButtonRef}
                 className={styles.closeButton}
                 type="button"
                 aria-label="Close modal"

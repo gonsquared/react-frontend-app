@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
 import styles from "./ActivateAccountPage.module.scss";
 
 type ActivationState = "loading" | "success" | "error";
@@ -22,20 +23,28 @@ export default function ActivateAccountPage() {
     const activateAccount = async () => {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/auth/activate?token=${encodeURIComponent(
-            token,
-          )}`,
+          getApiUrl(
+            `/api/auth/activate?token=${encodeURIComponent(token)}`,
+          ),
         );
-        const responseData = await response.json();
+        const responseData = await readJsonResponse<{
+          detail?: unknown;
+          message?: string;
+        }>(response);
 
         if (!response.ok) {
           throw new Error(
-            responseData.detail || "Failed to activate your account.",
+            getErrorMessage(
+              responseData?.detail,
+              "Failed to activate your account.",
+            ),
           );
         }
 
         setActivationState("success");
-        setMessage(responseData.message || "Email address activated successfully");
+        setMessage(
+          responseData?.message || "Email address activated successfully",
+        );
       } catch (error) {
         setActivationState("error");
         setMessage(

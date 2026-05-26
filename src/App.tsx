@@ -40,6 +40,9 @@ export default function App() {
     <Router>
       <div className={`${styles.app} ${isDarkTheme ? styles.darkTheme : ""}`}>
         <div className={styles.appBody}>
+          <a className={styles.skipLink} href="#main-content">
+            Skip to main content
+          </a>
           <Routes>
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Navigate to="/login" replace />} />

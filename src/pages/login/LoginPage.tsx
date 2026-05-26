@@ -2,7 +2,8 @@ import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import type { UserStatus } from "../../interfaces/User";
+import { getApiUrl, readJsonResponse } from "../../helpers/api";
+import type User from "../../interfaces/User";
 import styles from "./LoginPage.module.scss";
 
 const emptyLoginForm = {
@@ -18,13 +19,7 @@ type LoginResponse = {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    status: UserStatus;
-  };
+  user: User;
 };
 
 type BackendValidationError = {
@@ -114,7 +109,7 @@ export default function LoginPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/login", {
+      const response = await fetch(getApiUrl("/api/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,12 +117,18 @@ export default function LoginPage() {
         body: JSON.stringify(loginForm),
       });
 
-      const responseData = await response.json();
+      const responseData = await readJsonResponse<{
+        detail?: unknown;
+      } & Partial<LoginResponse>>(response);
 
       if (!response.ok) {
-        const parsedError = parseErrorDetail(responseData.detail);
+        const parsedError = parseErrorDetail(responseData?.detail);
         setFieldErrors(parsedError.fieldErrors);
         throw new Error(parsedError.message);
+      }
+
+      if (!responseData?.accessToken || !responseData.tokenType || !responseData.user) {
+        throw new Error("Failed to log in");
       }
 
       const loginResponse = responseData as LoginResponse;
@@ -186,7 +187,9 @@ export default function LoginPage() {
         </form>
         <div className={styles.authLinks}>
           <Link to="/register">Sign up</Link>
-          <a href="#">Forgot password?</a>
+          <button type="button" disabled aria-disabled="true">
+            Forgot password?
+          </button>
         </div>
       </div>
     </section>

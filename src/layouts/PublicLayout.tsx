@@ -3,7 +3,7 @@ import styles from "../App.module.scss";
 
 export default function PublicLayout() {
   return (
-    <main className={styles.content}>
+    <main id="main-content" className={styles.content} tabIndex={-1}>
       <Outlet />
     </main>
   );

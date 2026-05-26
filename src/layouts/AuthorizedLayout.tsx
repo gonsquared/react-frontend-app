@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
-import { clearStoredSession } from "../helpers/authSession";
-import type User from "../interfaces/User";
-import type { UserPermission } from "../interfaces/User";
+import {
+  clearStoredSession,
+  getAuthorizedUser,
+  hasPermission,
+} from "../helpers/authSession";
 import styles from "../App.module.scss";
 
 type AuthorizedLayoutProps = {
@@ -10,36 +12,27 @@ type AuthorizedLayoutProps = {
   toggleTheme: () => void;
 };
 
-const getAuthorizedUser = (): User | null => {
-  const accessToken = localStorage.getItem("accessToken");
-  const authUser = localStorage.getItem("authUser");
+const avatarPlaceholder =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23d9dee7'/%3E%3Ccircle cx='24' cy='19' r='8' fill='%23747f8f'/%3E%3Cpath d='M10 42c2.7-8.6 8-13 14-13s11.3 4.4 14 13' fill='%23747f8f'/%3E%3C/svg%3E";
 
-  if (!accessToken || !authUser) {
-    clearStoredSession();
-    return null;
+const getSafeAvatarUrl = (avatarUrl?: string): string => {
+  if (!avatarUrl) return avatarPlaceholder;
+
+  if (/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(avatarUrl)) {
+    return avatarUrl;
   }
 
   try {
-    return JSON.parse(authUser) as User;
+    const url = new URL(avatarUrl, window.location.origin);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.toString();
+    }
   } catch {
-    clearStoredSession();
-    return null;
+    return avatarPlaceholder;
   }
+
+  return avatarPlaceholder;
 };
-
-const getUserPermissions = (user: User): UserPermission[] => {
-  if (user.permissions) return user.permissions;
-
-  return user.role === "admin"
-    ? ["manage_users", "manage_own", "manage_notes", "manage_own_notes"]
-    : ["manage_own", "manage_own_notes"];
-};
-
-const hasPermission = (user: User, permission: UserPermission): boolean =>
-  getUserPermissions(user).includes(permission);
-
-const avatarPlaceholder =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23d9dee7'/%3E%3Ccircle cx='24' cy='19' r='8' fill='%23747f8f'/%3E%3Cpath d='M10 42c2.7-8.6 8-13 14-13s11.3 4.4 14 13' fill='%23747f8f'/%3E%3C/svg%3E";
 
 export default function AuthorizedLayout({
   isDarkTheme,
@@ -82,7 +75,7 @@ export default function AuthorizedLayout({
   const canManageUsers = hasPermission(authUser, "manage_users");
   const canManageNotes = hasPermission(authUser, "manage_notes");
   const canManageOwnNotes = hasPermission(authUser, "manage_own_notes");
-  const accountAvatarUrl = authUser.avatarUrl || avatarPlaceholder;
+  const accountAvatarUrl = getSafeAvatarUrl(authUser.avatarUrl);
   const hasMobileNavLinks =
     canManageUsers || canManageNotes || canManageOwnNotes;
 
@@ -225,9 +218,11 @@ export default function AuthorizedLayout({
         </button>
       )}
       <main
+        id="main-content"
         className={`${styles.content} ${
           isSidebarOpen ? "" : styles.contentWithClosedSidebar
         }`}
+        tabIndex={-1}
       >
         <Outlet />
       </main>

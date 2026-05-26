@@ -182,6 +182,32 @@ describe("UsersPage", () => {
     cy.findByText("Inactive").should("exist");
   });
 
+  it("keeps keyboard focus inside the user modal", () => {
+    setStoredSession("admin");
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .resolves(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+    render(<UsersPage />);
+
+    cy.findByLabelText("Add user").click();
+    cy.findByLabelText("Close modal").should("be.focused");
+    cy.findByLabelText("Close modal").trigger("keydown", {
+      key: "Tab",
+      shiftKey: true,
+    });
+    cy.findByRole("button", { name: "Save" }).should("be.focused");
+    cy.findByRole("button", { name: "Save" }).trigger("keydown", {
+      key: "Tab",
+    });
+    cy.findByLabelText("Close modal").should("be.focused");
+  });
+
   it("shows a success toast after updating a user", () => {
     setStoredSession("admin");
     const users = [
@@ -269,6 +295,54 @@ describe("UsersPage", () => {
       "have.css",
       "border-color",
       "rgb(198, 40, 40)",
+    );
+  });
+
+  it("shows FastAPI validation errors in a readable format", () => {
+    setStoredSession("admin");
+    cy.stub(window, "fetch")
+      .withArgs("http://localhost:4000/api/users/")
+      .onFirstCall()
+      .resolves(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .onSecondCall()
+      .resolves(
+        new Response(
+          JSON.stringify({
+            detail: [
+              {
+                loc: ["body", "firstName"],
+                msg: "String should have at most 100 characters",
+              },
+            ],
+          }),
+          {
+            status: 422,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+      );
+
+    render(<UsersPage />);
+
+    cy.findByLabelText("Add user").click();
+    cy.findByLabelText("First Name").type("G".repeat(101));
+    cy.findByLabelText("Last Name").type("Hopper");
+    cy.findByLabelText("Email").type("grace@example.com");
+    cy.findByRole("button", { name: "Save" }).click();
+
+    cy.findByRole("alert").should(
+      "contain.text",
+      "First name: String should have at most 100 characters",
+    );
+    cy.findByLabelText("First Name").should(
+      "have.attr",
+      "aria-invalid",
+      "true",
     );
   });
 

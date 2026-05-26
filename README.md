@@ -57,9 +57,14 @@ The app runs at `http://localhost:5173` by default.
 
 ## Backend Dependency
 
-The `/users` route fetches from `http://localhost:4000/api/users`. This is a separate MongoDB-backed service that must be running independently before navigating to that page. The URL is hardcoded in [src/pages/UsersPage.tsx](src/pages/UsersPage.tsx) — there is no Vite proxy or environment variable configured.
+The app calls a separate backend API. By default, API requests use
+`http://localhost:4000`. Override this per environment with:
 
-Start the backend service before using the Users page.
+```bash
+VITE_API_BASE_URL=https://api.example.com
+```
+
+Start the backend service before using authenticated pages.
 
 ## Pages
 
@@ -137,12 +142,14 @@ docker compose up -d
 
 The production container exposes port `80`. The examples above map it to host port `5173`. Docker Compose runs the Vite dev server directly on host port `5173`.
 
-The Users page still fetches `http://localhost:4000/api/users` from the browser, so the backend service must be running on the host at port `4000` when you use the container locally.
+API requests are made by the browser. When running the container locally, keep
+the backend reachable from the browser at `VITE_API_BASE_URL`, or use the default
+`http://localhost:4000`.
 
 ## Architecture Notes
 
 - **Routing:** `App.tsx` owns the `<BrowserRouter>`, `<nav>`, and route layout. Two routes — `/` and `/users`.
-- **Data fetching:** Each page fetches its own data directly via `fetch()`. No shared data layer or state management library.
+- **Data fetching:** Pages use native `fetch()` with shared API URL and auth header helpers. No shared state management library.
 - **Styling:** SCSS Modules for component-scoped styles; `src/index.css` for global styles.
 - **Types:** Shared TypeScript interfaces live in `src/interfaces/`. Current types: `User` (`id`, `name`, `email`, `age`).
 - **TypeScript config:** Split into three files — project references root in `tsconfig.json`, `tsconfig.app.json` for source, `tsconfig.node.json` for Vite config.
@@ -207,5 +214,7 @@ Run `bun run lint` to identify type issues before building. Ensure all TypeScrip
 **Port 5173 already in use**
 Another Vite dev server is running. Stop it or run `bun run dev -- --port 5174` to use a different port.
 
-**Docker container starts but `/users` cannot load data**
-The frontend is served from the container, but the API request is made by your browser to `http://localhost:4000`. Start the backend service on the host before opening `/users`.
+**Docker container starts but authenticated pages cannot load data**
+The frontend is served from the container, but API requests are made by your
+browser. Start the backend service on the host or set `VITE_API_BASE_URL` to a
+browser-reachable API origin.

@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
-import { handleUnauthorizedResponse } from "../../helpers/authSession";
+import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
+import {
+  getAuthHeaders,
+  getStoredAuthUser,
+  handleUnauthorizedResponse,
+} from "../../helpers/authSession";
 import type User from "../../interfaces/User";
 import type {
   UserPermission,
@@ -11,30 +16,26 @@ import styles from "./ProfilePage.module.scss";
 const avatarPlaceholder =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='24' fill='%23d9dee7'/%3E%3Ccircle cx='24' cy='19' r='8' fill='%23747f8f'/%3E%3Cpath d='M10 42c2.7-8.6 8-13 14-13s11.3 4.4 14 13' fill='%23747f8f'/%3E%3C/svg%3E";
 
-const getStoredAuthUser = (): User | null => {
-  const authUser = localStorage.getItem("authUser");
+const allowedAvatarTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const maxAvatarSizeBytes = 2 * 1024 * 1024;
 
-  if (!authUser) return null;
+const getSafeAvatarUrl = (avatarUrl?: string): string => {
+  if (!avatarUrl) return avatarPlaceholder;
+
+  if (/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(avatarUrl)) {
+    return avatarUrl;
+  }
 
   try {
-    return JSON.parse(authUser) as User;
+    const url = new URL(avatarUrl, window.location.origin);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.toString();
+    }
   } catch {
-    return null;
+    return avatarPlaceholder;
   }
-};
 
-const getStoredAccessToken = () => localStorage.getItem("accessToken");
-
-const getAuthHeaders = (
-  baseHeaders: Record<string, string> = {},
-): Record<string, string> => {
-  const accessToken = getStoredAccessToken();
-  if (!accessToken) return baseHeaders;
-
-  return {
-    ...baseHeaders,
-    Authorization: `Bearer ${accessToken}`,
-  };
+  return avatarPlaceholder;
 };
 
 const formatLabel = (value: string): string => {
@@ -88,17 +89,28 @@ export default function ProfilePage() {
 
   const fullName = `${authUser.firstName} ${authUser.lastName}`.trim();
   const permissions = getUserPermissions(authUser);
-  const avatarUrl = authUser.avatarUrl || avatarPlaceholder;
+  const avatarUrl = getSafeAvatarUrl(authUser.avatarUrl);
 
   const updateAvatar = async (file: File) => {
     setUploadMessage("");
     setUploadError("");
+
+    if (!allowedAvatarTypes.includes(file.type)) {
+      setUploadError("Avatar must be a PNG, JPEG, GIF, or WebP image.");
+      return;
+    }
+
+    if (file.size > maxAvatarSizeBytes) {
+      setUploadError("Avatar image must be 2 MB or smaller.");
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       const avatarDataUrl = await readFileAsDataUrl(file);
       const response = await fetch(
-        `http://localhost:4000/api/users/${authUser.id}/avatar`,
+        getApiUrl(`/api/users/${authUser.id}/avatar`),
         {
           method: "PATCH",
           headers: getAuthHeaders({ "Content-Type": "application/json" }),
@@ -109,11 +121,16 @@ export default function ProfilePage() {
       if (handleUnauthorizedResponse(response)) return;
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to update avatar");
+        const errorData = await readJsonResponse<{ detail?: unknown }>(
+          response,
+        );
+        throw new Error(
+          getErrorMessage(errorData?.detail, "Failed to update avatar"),
+        );
       }
 
-      const updatedUser: User = await response.json();
+      const updatedUser = await readJsonResponse<User>(response);
+      if (!updatedUser) throw new Error("Failed to update avatar");
       setAuthUser(updatedUser);
       localStorage.setItem("authUser", JSON.stringify(updatedUser));
       setUploadMessage("Avatar updated.");

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { getApiUrl, readJsonResponse } from "../../helpers/api";
 import styles from "./RegisterPage.module.scss";
 
 const emptyRegistrationForm = {
@@ -119,7 +120,7 @@ export default function RegisterPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/register", {
+      const response = await fetch(getApiUrl("/api/auth/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,17 +128,20 @@ export default function RegisterPage() {
         body: JSON.stringify(registrationForm),
       });
 
-      const responseData = await response.json();
+      const responseData = await readJsonResponse<{
+        detail?: unknown;
+        message?: string;
+      }>(response);
 
       if (!response.ok) {
-        const parsedError = parseErrorDetail(responseData.detail);
+        const parsedError = parseErrorDetail(responseData?.detail);
         setFieldErrors(parsedError.fieldErrors);
         throw new Error(parsedError.message);
       }
 
       setRegistrationForm(emptyRegistrationForm);
       setSuccessMessage(
-        responseData.message ||
+        responseData?.message ||
           "Registration successful. Please check your email to activate your account.",
       );
     } catch (error) {

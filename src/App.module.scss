@@ -43,6 +43,27 @@
   min-height: 100vh;
 }
 
+.skipLink {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.25rem;
+  background-color: var(--sidebar-button-background);
+  color: var(--page-text);
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.5rem);
+
+  &:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
 .sidebar {
   position: relative;
   display: flex;
@@ -296,6 +317,7 @@
 .content {
   flex: 1;
   padding: 1rem;
+  outline: none;
 
   h1:first-child {
     margin-top: 0;
@@ -310,6 +332,15 @@
   td {
     border: 1px solid var(--table-border);
     padding: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app,
+  .accountMenuCaret,
+  .themeToggle,
+  .themeToggle::after {
+    transition-duration: 0.01ms;
   }
 }
 

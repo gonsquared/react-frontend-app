@@ -30,10 +30,8 @@ describe("Auth routes", () => {
       "href",
       "/register",
     );
-    expect(screen.getByRole("link", { name: "Forgot password?" })).to.have.attr(
-      "href",
-      "#",
-    );
+    expect(screen.getByRole("button", { name: "Forgot password?" })).to.have
+      .attr("aria-disabled", "true");
   });
 
   it("logs in a user, stores the session, and opens users", () => {
@@ -475,7 +473,7 @@ describe("Auth routes", () => {
       "href",
       "/my-notes/new",
     );
-    cy.findByRole("row", { name: /Release checklist/i }).click();
+    cy.findByRole("button", { name: "Release checklist" }).click();
     cy.location("pathname").should("equal", "/my-notes/note-1");
   });
 
