@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
   server: {
-    port: 5173,
+    port: Number(process.env.VITE_PORT || 5173),
     strictPort: true,
     allowedHosts: ["host.docker.internal"],
   },

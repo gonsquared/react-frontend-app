@@ -82,6 +82,7 @@ export default function AuthorizedLayout({
   const canManageUsers = hasPermission(authUser, "manage_users");
   const canManageNotes = hasPermission(authUser, "manage_notes");
   const canManageOwnNotes = hasPermission(authUser, "manage_own_notes");
+  const accountAvatarUrl = authUser.avatarUrl || avatarPlaceholder;
   const hasMobileNavLinks =
     canManageUsers || canManageNotes || canManageOwnNotes;
 
@@ -160,7 +161,7 @@ export default function AuthorizedLayout({
             >
               <img
                 className={styles.accountAvatar}
-                src={avatarPlaceholder}
+                src={accountAvatarUrl}
                 alt=""
                 aria-hidden="true"
               />

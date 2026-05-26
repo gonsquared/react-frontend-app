@@ -279,6 +279,7 @@ describe("Auth routes", () => {
           "manage_notes",
           "manage_own_notes",
         ],
+        avatarUrl: "data:image/png;base64,c2lkZWJhci1hdmF0YXI=",
       }),
     );
 
@@ -300,6 +301,13 @@ describe("Auth routes", () => {
     );
     expect(screen.getByRole("button", { name: "Jane account menu" })).to.not
       .equal(null);
+    cy.findByRole("button", { name: "Jane account menu" })
+      .find("img")
+      .should(
+        "have.attr",
+        "src",
+        "data:image/png;base64,c2lkZWJhci1hdmF0YXI=",
+      );
     expect(screen.queryByRole("link", { name: "Profile" })).to.equal(null);
     cy.findByRole("button", { name: "Jane account menu" }).click();
     cy.findByRole("button", { name: "Jane account menu" }).then(
