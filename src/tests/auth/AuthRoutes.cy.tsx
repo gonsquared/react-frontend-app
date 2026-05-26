@@ -207,7 +207,7 @@ describe("Auth routes", () => {
     expect(screen.getByRole("link", { name: "Users" })).to.not.equal(null);
     expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
       "href",
-      "#",
+      "/profile",
     );
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
   });
@@ -233,9 +233,36 @@ describe("Auth routes", () => {
     expect(screen.queryByRole("link", { name: "Users" })).to.equal(null);
     expect(screen.getByRole("link", { name: "Profile" })).to.have.attr(
       "href",
-      "#",
+      "/profile",
     );
     expect(screen.getByLabelText("Hide sidebar")).to.not.equal(null);
+  });
+
+  it("renders the profile page with the stored session user", () => {
+    window.history.pushState({}, "", "/profile");
+    localStorage.setItem("accessToken", "fake-access-token");
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify({
+        id: "64f1f77bcf86cd7994390111",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@example.com",
+        status: "active",
+        role: "admin",
+        permissions: ["manage_users", "manage_own"],
+      }),
+    );
+
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Profile" })).to.not.equal(null);
+    expect(screen.getByText("Jane Doe")).to.not.equal(null);
+    expect(screen.getByText("jane@example.com")).to.not.equal(null);
+    expect(screen.getByText("Active")).to.not.equal(null);
+    expect(screen.getByText("Admin")).to.not.equal(null);
+    expect(screen.getByText("Manage users")).to.not.equal(null);
+    expect(screen.getByText("Manage own")).to.not.equal(null);
   });
 
   it("registers a user and shows the activation email instruction", () => {

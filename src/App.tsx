@@ -8,6 +8,7 @@ import {
 import Home from "./pages/home/HomePage";
 import ActivateAccountPage from "./pages/activate-account/ActivateAccountPage";
 import LoginPage from "./pages/login/LoginPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 import RegisterPage from "./pages/register/RegisterPage";
 import Users from "./pages/users/UsersPage";
 import AuthorizedLayout from "./layouts/AuthorizedLayout";
@@ -55,6 +56,7 @@ export default function App() {
               }
             >
               <Route path="/home" element={<Home />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/users" element={<Users />} />
             </Route>
           </Routes>

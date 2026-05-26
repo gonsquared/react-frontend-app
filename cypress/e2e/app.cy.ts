@@ -70,6 +70,17 @@ describe("App", () => {
       .should("have.attr", "aria-pressed", "true");
   });
 
+  it("opens the profile page from the sidebar", () => {
+    visitAuthorized("/home");
+
+    cy.findByRole("link", { name: "Profile" }).click();
+
+    cy.location("pathname").should("equal", "/profile");
+    cy.findByRole("heading", { name: "Profile" }).should("be.visible");
+    cy.findByText("Jane Doe").should("be.visible");
+    cy.findByText("jane@example.com").should("be.visible");
+  });
+
   it("adds a user through the modal", () => {
     const newUser = {
       id: "3",

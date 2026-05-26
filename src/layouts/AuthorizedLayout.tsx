@@ -60,9 +60,9 @@ export default function AuthorizedLayout({
             {canManageUsers ? <Link to="/users">Users</Link> : null}
           </div>
           <div className={styles.sidebarFooter}>
-            <a className={styles.profileLink} href="#">
+            <Link className={styles.profileLink} to="/profile">
               Profile
-            </a>
+            </Link>
             <button
               className={`${styles.themeToggle} ${
                 isDarkTheme ? styles.themeToggleDark : ""
