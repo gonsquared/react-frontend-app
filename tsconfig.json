@@ -20,6 +20,5 @@
       "*": ["*", "*.ts", "*.tsx"]
     }
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.cy.ts", "src/**/*.cy.tsx"]
+  "include": ["src"]
 }

@@ -47,13 +47,62 @@ export default function NotesPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [authUser] = useState<User | null>(() => getStoredAuthUser());
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<NoteStatus>("not published");
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [statusSaveError, setStatusSaveError] = useState("");
   const modalRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const canManageNotes =
     authUser !== null && hasPermission(authUser, "manage_notes");
 
-  const closeModal = useCallback(() => setSelectedNote(null), []);
+  const closeModal = useCallback(() => {
+    setSelectedNote(null);
+    setIsEditingStatus(false);
+    setStatusSaveError("");
+  }, []);
+
+  const handleStatusSave = useCallback(async () => {
+    if (!selectedNote) return;
+    setIsSavingStatus(true);
+    setStatusSaveError("");
+    try {
+      const response = await fetch(getApiUrl(`/api/notes/${selectedNote.id}`), {
+        method: "PUT",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: pendingStatus }),
+      });
+
+      if (handleUnauthorizedResponse(response)) return;
+
+      if (!response.ok) {
+        const errorData = await readJsonResponse<{ detail?: unknown }>(response);
+        throw new Error(
+          getErrorMessage(errorData?.detail, "Failed to update status"),
+        );
+      }
+
+      const data = await readJsonResponse<Note>(response);
+      const updatedAt = data?.updatedAt ?? selectedNote.updatedAt;
+
+      setSelectedNote((prev) =>
+        prev ? { ...prev, status: pendingStatus, updatedAt } : prev,
+      );
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === selectedNote.id ? { ...n, status: pendingStatus, updatedAt } : n,
+        ),
+      );
+      setIsEditingStatus(false);
+    } catch (error) {
+      setStatusSaveError(
+        error instanceof Error ? error.message : "Failed to update status",
+      );
+    } finally {
+      setIsSavingStatus(false);
+    }
+  }, [selectedNote, pendingStatus]);
 
   useEffect(() => {
     if (!authUser || !canManageNotes) return;
@@ -128,8 +177,18 @@ export default function NotesPage() {
               <tr
                 key={note.id}
                 className={styles.noteRow}
-                onClick={() => setSelectedNote(note)}
-                onKeyDown={(e) => e.key === "Enter" && setSelectedNote(note)}
+                onClick={() => {
+                  setSelectedNote(note);
+                  setIsEditingStatus(false);
+                  setStatusSaveError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setSelectedNote(note);
+                    setIsEditingStatus(false);
+                    setStatusSaveError("");
+                  }
+                }}
                 tabIndex={0}
                 aria-label={`View note: ${note.title}`}
               >
@@ -177,18 +236,83 @@ export default function NotesPage() {
             />
             <div className={styles.modalMeta}>
               <span>{selectedNote.userName}</span>
-              <span
-                className={`${styles.statusBadge} ${getStatusClassName(
-                  selectedNote.status,
-                )}`}
-              >
-                {getStatusLabel(selectedNote.status)}
-              </span>
+              {isEditingStatus ? (
+                <>
+                  <select
+                    className={styles.statusSelect}
+                    value={pendingStatus}
+                    onChange={(e) =>
+                      setPendingStatus(e.target.value as NoteStatus)
+                    }
+                    disabled={isSavingStatus}
+                    aria-label="Note status"
+                  >
+                    <option value="published">Published</option>
+                    <option value="not published">Not Published</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.closeButton}
+                    aria-label="Save status"
+                    onClick={handleStatusSave}
+                    disabled={isSavingStatus}
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.closeButton}
+                    aria-label="Cancel editing status"
+                    onClick={() => {
+                      setIsEditingStatus(false);
+                      setStatusSaveError("");
+                    }}
+                    disabled={isSavingStatus}
+                  >
+                    ✗
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span
+                    className={`${styles.statusBadge} ${getStatusClassName(
+                      selectedNote.status,
+                    )}`}
+                  >
+                    {getStatusLabel(selectedNote.status)}
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.editStatusButton}
+                    aria-label="Edit status"
+                    onClick={() => {
+                      setPendingStatus(selectedNote.status);
+                      setIsEditingStatus(true);
+                      setStatusSaveError("");
+                    }}
+                  >
+                    ✏
+                  </button>
+                </>
+              )}
               <span>{formatUpdatedDate(selectedNote.updatedAt)}</span>
-              <button type="button" className={styles.closeTextButton} onClick={closeModal}>
+              <button
+                type="button"
+                className={styles.closeTextButton}
+                onClick={closeModal}
+              >
                 Close
               </button>
             </div>
+            {statusSaveError && (
+              <p
+                className={`${styles.errorMessage} ${styles.statusSaveError}`}
+                role="alert"
+              >
+                {statusSaveError}
+              </p>
+            )}
           </div>
         </div>
       ) : null}

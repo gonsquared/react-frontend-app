@@ -164,3 +164,40 @@
     background-color: var(--sidebar-button-hover);
   }
 }
+
+.editStatusButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--table-border);
+  border-radius: 0.25rem;
+  background-color: var(--sidebar-button-background);
+  color: var(--page-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+
+  &:hover {
+    background-color: var(--sidebar-button-hover);
+  }
+}
+
+.statusSelect {
+  box-sizing: border-box;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--table-border);
+  border-radius: 0.25rem;
+  background-color: var(--sidebar-button-background);
+  color: var(--page-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.statusSaveError {
+  padding: 0.25rem 1rem 0.5rem;
+  font-size: 0.85rem;
+  border-top: 1px solid var(--table-border);
+  margin: 0;
+}
