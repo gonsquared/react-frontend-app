@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
 import {
@@ -7,6 +7,8 @@ import {
   handleUnauthorizedResponse,
   hasPermission,
 } from "../../helpers/authSession";
+import { useDialogFocusTrap } from "../../helpers/useDialogFocusTrap";
+import { sanitizeHtml } from "../../helpers/sanitizeHtml";
 import type User from "../../interfaces/User";
 import styles from "./NotesPage.module.scss";
 
@@ -18,6 +20,7 @@ type Note = {
   contents: string;
   status: NoteStatus;
   user: string;
+  userName: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -43,9 +46,14 @@ export default function NotesPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [authUser] = useState<User | null>(() => getStoredAuthUser());
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const canManageNotes =
     authUser !== null && hasPermission(authUser, "manage_notes");
+
+  const closeModal = useCallback(() => setSelectedNote(null), []);
 
   useEffect(() => {
     if (!authUser || !canManageNotes) return;
@@ -81,6 +89,13 @@ export default function NotesPage() {
     getNotes();
   }, [authUser, canManageNotes]);
 
+  useDialogFocusTrap({
+    isOpen: selectedNote !== null,
+    dialogRef: modalRef,
+    initialFocusRef: closeButtonRef,
+    onEscape: closeModal,
+  });
+
   if (!authUser || !canManageNotes) {
     return <Navigate to="/home" replace />;
   }
@@ -110,9 +125,16 @@ export default function NotesPage() {
           </thead>
           <tbody>
             {notes.map((note) => (
-              <tr key={note.id}>
+              <tr
+                key={note.id}
+                className={styles.noteRow}
+                onClick={() => setSelectedNote(note)}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedNote(note)}
+                tabIndex={0}
+                aria-label={`View note: ${note.title}`}
+              >
                 <td>{note.title}</td>
-                <td>{note.user}</td>
+                <td>{note.userName}</td>
                 <td>
                   <span
                     className={`${styles.statusBadge} ${getStatusClassName(
@@ -128,6 +150,48 @@ export default function NotesPage() {
           </tbody>
         </table>
       )}
+      {selectedNote ? (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            ref={modalRef}
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="note-modal-title"
+          >
+            <div className={styles.modalHeader}>
+              <h2 id="note-modal-title">{selectedNote.title}</h2>
+              <button
+                ref={closeButtonRef}
+                className={styles.closeButton}
+                type="button"
+                aria-label="Close modal"
+                onClick={closeModal}
+              >
+                ×
+              </button>
+            </div>
+            <div
+              className={styles.modalContents}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedNote.contents) }}
+            />
+            <div className={styles.modalMeta}>
+              <span>{selectedNote.userName}</span>
+              <span
+                className={`${styles.statusBadge} ${getStatusClassName(
+                  selectedNote.status,
+                )}`}
+              >
+                {getStatusLabel(selectedNote.status)}
+              </span>
+              <span>{formatUpdatedDate(selectedNote.updatedAt)}</span>
+              <button type="button" className={styles.closeTextButton} onClick={closeModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

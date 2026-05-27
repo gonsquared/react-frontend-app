@@ -10,6 +10,7 @@ import {
   hasPermission,
 } from "../../helpers/authSession";
 import type User from "../../interfaces/User";
+import { sanitizeHtml } from "../../helpers/sanitizeHtml";
 import styles from "./NoteFormPage.module.scss";
 
 type NoteStatus = "published" | "not published" | "archived";
@@ -30,60 +31,10 @@ type NotePayload = {
   status: Exclude<NoteStatus, "archived">;
 };
 
-const allowedEditorTags = new Set([
-  "B",
-  "BR",
-  "DIV",
-  "EM",
-  "I",
-  "LI",
-  "OL",
-  "P",
-  "SPAN",
-  "STRONG",
-  "UL",
-]);
-
-const blockedEditorTags = new Set(["IFRAME", "OBJECT", "SCRIPT", "STYLE"]);
-
 const getTextFromHtml = (html: string) => {
   const element = document.createElement("div");
-  element.innerHTML = sanitizeEditorHtml(html);
+  element.innerHTML = sanitizeHtml(html);
   return element.textContent?.trim() ?? "";
-};
-
-const unwrapElement = (element: Element) => {
-  const parent = element.parentNode;
-  if (!parent) return;
-
-  while (element.firstChild) {
-    parent.insertBefore(element.firstChild, element);
-  }
-
-  parent.removeChild(element);
-};
-
-const sanitizeEditorHtml = (html: string) => {
-  const template = document.createElement("template");
-  template.innerHTML = html;
-
-  [...template.content.querySelectorAll("*")].forEach((element) => {
-    if (blockedEditorTags.has(element.tagName)) {
-      element.remove();
-      return;
-    }
-
-    if (!allowedEditorTags.has(element.tagName)) {
-      unwrapElement(element);
-      return;
-    }
-
-    [...element.attributes].forEach((attribute) => {
-      element.removeAttribute(attribute.name);
-    });
-  });
-
-  return template.innerHTML;
 };
 
 export default function NoteFormPage() {
@@ -127,7 +78,7 @@ export default function NoteFormPage() {
         const note = await readJsonResponse<Note>(response);
         if (!note) throw new Error("Failed to fetch note");
         setTitle(note.title);
-        setContents(sanitizeEditorHtml(note.contents));
+        setContents(sanitizeHtml(note.contents));
       } catch (error) {
         setErrorMessage(
           error instanceof Error ? error.message : "Failed to fetch note",
@@ -158,7 +109,7 @@ export default function NoteFormPage() {
   });
 
   const updateContents = () => {
-    setContents(sanitizeEditorHtml(editorRef.current?.innerHTML ?? ""));
+    setContents(sanitizeHtml(editorRef.current?.innerHTML ?? ""));
   };
 
   const formatContents = (command: "bold" | "italic" | "insertUnorderedList") => {
