@@ -20,17 +20,4 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
-  {
-    files: ['cypress/**/*.{ts,tsx}', 'src/**/*.cy.{ts,tsx}'],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: {
-        ...globals.browser,
-        ...globals.mocha,
-        cy: 'readonly',
-        Cypress: 'readonly',
-        expect: 'readonly',
-      },
-    },
-  },
 ])

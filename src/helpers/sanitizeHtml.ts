@@ -47,3 +47,10 @@ export const sanitizeHtml = (html: string): string => {
 
   return template.innerHTML;
 };
+
+export const getTextFromHtml = (html: string): string => {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  return template.content.textContent?.trim() ?? "";
+};

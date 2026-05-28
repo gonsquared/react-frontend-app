@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
 import {
@@ -14,6 +14,7 @@ import NoteEditModal from "../../components/notes/NoteEditModal";
 import LabelFilter from "../../components/notes/LabelFilter";
 import SearchBar from "../../components/notes/SearchBar";
 import ReminderBanner from "../../components/notes/ReminderBanner";
+import { getTextFromHtml } from "../../helpers/sanitizeHtml";
 import styles from "./KeepGrid.module.scss";
 
 export default function KeepGrid() {
@@ -118,27 +119,50 @@ export default function KeepGrid() {
       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
     );
 
-  const distinctLabels = Array.from(new Set(notes.flatMap((n) => n.labels))).sort();
+  const distinctLabels = useMemo(
+    () => Array.from(new Set(notes.flatMap((n) => n.labels))).sort(),
+    [notes],
+  );
 
-  const filteredNotes = notes.filter((note) => {
-    if (activeLabels.length > 0 && !activeLabels.some((l) => note.labels.includes(l)))
-      return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const titleMatch = note.title.toLowerCase().includes(q);
-      const contentEl = document.createElement("div");
-      contentEl.innerHTML = note.contents;
-      const contentMatch = (contentEl.textContent ?? "").toLowerCase().includes(q);
-      const checklistMatch = note.checklistItems.some((i) =>
-        i.text.toLowerCase().includes(q)
-      );
-      if (!titleMatch && !contentMatch && !checklistMatch) return false;
-    }
-    return true;
-  });
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
-  const pinnedNotes = filteredNotes.filter((n) => n.isPinned);
-  const otherNotes = filteredNotes.filter((n) => !n.isPinned);
+  const filteredNotes = useMemo(
+    () =>
+      notes.filter((note) => {
+        if (
+          activeLabels.length > 0 &&
+          !activeLabels.some((label) => note.labels.includes(label))
+        ) {
+          return false;
+        }
+
+        if (normalizedSearchQuery) {
+          const titleMatch = note.title
+            .toLowerCase()
+            .includes(normalizedSearchQuery);
+          const contentMatch = getTextFromHtml(note.contents)
+            .toLowerCase()
+            .includes(normalizedSearchQuery);
+          const checklistMatch = note.checklistItems.some((item) =>
+            item.text.toLowerCase().includes(normalizedSearchQuery),
+          );
+
+          if (!titleMatch && !contentMatch && !checklistMatch) return false;
+        }
+
+        return true;
+      }),
+    [activeLabels, normalizedSearchQuery, notes],
+  );
+
+  const pinnedNotes = useMemo(
+    () => filteredNotes.filter((note) => note.isPinned),
+    [filteredNotes],
+  );
+  const otherNotes = useMemo(
+    () => filteredNotes.filter((note) => !note.isPinned),
+    [filteredNotes],
+  );
 
   if (!authUser || !canManageOwnNotes) {
     return <Navigate to="/home" replace />;

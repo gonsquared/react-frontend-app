@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
+import { getApiUrl, readJsonResponse } from "../../helpers/api";
 import { getAuthHeaders, handleUnauthorizedResponse } from "../../helpers/authSession";
 import type { Note } from "../../interfaces/Note";
 import styles from "./ReminderBanner.module.scss";

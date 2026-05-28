@@ -183,11 +183,12 @@ export default function NotesPage() {
                   setStatusSaveError("");
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setSelectedNote(note);
-                    setIsEditingStatus(false);
-                    setStatusSaveError("");
-                  }
+                  if (e.key !== "Enter" && e.key !== " ") return;
+
+                  e.preventDefault();
+                  setSelectedNote(note);
+                  setIsEditingStatus(false);
+                  setStatusSaveError("");
                 }}
                 tabIndex={0}
                 aria-label={`View note: ${note.title}`}

@@ -1,5 +1,6 @@
 import { getApiUrl } from "../../helpers/api";
 import { getNoteColorHex } from "../../helpers/noteColors";
+import { getTextFromHtml } from "../../helpers/sanitizeHtml";
 import type { Note } from "../../interfaces/Note";
 import styles from "./NoteCard.module.scss";
 
@@ -9,12 +10,6 @@ type Props = {
   onPin: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
 };
-
-function getTextFromHtml(html: string): string {
-  const el = document.createElement("div");
-  el.innerHTML = html;
-  return el.textContent?.trim() ?? "";
-}
 
 export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
   const imageUrl = note.imagePath
@@ -34,7 +29,12 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
       className={styles.card}
       style={cardStyle}
       onClick={onClick}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+
+        e.preventDefault();
+        onClick();
+      }}
       tabIndex={0}
       role="button"
       aria-label={`Open note: ${note.title || "Untitled"}`}

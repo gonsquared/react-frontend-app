@@ -110,7 +110,7 @@ Start the backend service before using any authenticated pages.
 | `bun run build`      | Type-check and produce a production build            |
 | `bun run preview`    | Serve the production build locally                   |
 | `bun run lint`       | Run ESLint across all TypeScript source files        |
-| `bun run precommit`  | Run the full pre-commit gate (lint, build, Cypress)  |
+| `bun run precommit`  | Run the full pre-commit gate (lint and build)        |
 
 ## Git Hooks
 
@@ -120,7 +120,7 @@ This repo includes a tracked pre-commit hook in `.githooks/pre-commit`. Register
 git config core.hooksPath .githooks
 ```
 
-Every commit triggers `bun run precommit`, which runs lint, a production build, Cypress component tests, then Cypress end-to-end tests. Cypress runs inside the `cypress/included:15.15.0` Docker image so the browser environment is consistent — **Docker must be running before committing**.
+Every commit triggers `bun run precommit`, which runs lint and a production build.
 
 ## Linting
 
@@ -205,9 +205,6 @@ Run `bun run lint` to surface type issues first. Ensure all TypeScript errors in
 
 **Port 5173 already in use**
 Another Vite dev server is running. Stop it or run `bun run dev -- --port 5174` to use a different port.
-
-**Pre-commit hook fails — Docker not found**
-The Cypress runs in the `cypress/included:15.15.0` Docker image. Ensure Docker Desktop is running before committing.
 
 **Docker container starts but authenticated pages cannot load data**
 API requests are made by your browser, not the container. Start the backend service on the host or set `VITE_API_BASE_URL` to a browser-reachable API origin.

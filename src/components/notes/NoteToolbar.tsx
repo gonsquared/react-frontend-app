@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { getApiUrl, getErrorMessage, readJsonResponse } from "../../helpers/api";
-import { getAuthHeaders } from "../../helpers/authSession";
+import { getAuthHeaders, handleUnauthorizedResponse } from "../../helpers/authSession";
 import { NOTE_COLORS } from "../../helpers/noteColors";
 import type { NoteColor, NoteType } from "../../interfaces/Note";
 import styles from "./NoteToolbar.module.scss";
@@ -70,6 +70,7 @@ export default function NoteToolbar({
         headers: getAuthHeaders(),
         body: form,
       });
+      if (handleUnauthorizedResponse(response)) return;
       if (!response.ok) {
         const err = await readJsonResponse<{ detail?: unknown }>(response);
         throw new Error(getErrorMessage(err?.detail, "Upload failed"));
