@@ -1,0 +1,24 @@
+.form {
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  background: var(--sidebar-button-background);
+  border: 1px solid var(--table-border);
+  border-radius: 0.5rem;
+  color: var(--page-text);
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.35rem 0.75rem;
+  width: 100%;
+
+  &::placeholder {
+    opacity: 0.5;
+  }
+
+  &:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
