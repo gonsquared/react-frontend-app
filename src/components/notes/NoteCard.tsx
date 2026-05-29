@@ -11,6 +11,51 @@ type Props = {
   onDelete: (e: React.MouseEvent) => void;
 };
 
+function PinIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M14 3l7 7-3 1-4 4v5l-2 2-3.5-6.5L2 12l2-2h5l4-4 1-3z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9zM10 21h4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
   const imageUrl = note.imagePath
     ? getApiUrl(`/api/images/${note.imagePath}`)
@@ -41,7 +86,7 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
     >
       {note.isPinned && (
         <span className={styles.pinnedIcon} aria-label="Pinned">
-          📌
+          <PinIcon filled />
         </span>
       )}
       {imageUrl && (
@@ -76,7 +121,8 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
       )}
       {reminderIsFuture && (
         <span className={styles.reminderBadge}>
-          🔔 {new Date(note.reminderAt!).toLocaleDateString()}
+          <BellIcon />
+          {new Date(note.reminderAt!).toLocaleDateString()}
         </span>
       )}
       <div
@@ -90,7 +136,7 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
           aria-label={note.isPinned ? "Unpin note" : "Pin note"}
           onClick={onPin}
         >
-          {note.isPinned ? "📌" : "📍"}
+          <PinIcon filled={note.isPinned} />
         </button>
         <button
           type="button"
@@ -98,7 +144,7 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
           aria-label="Delete note"
           onClick={onDelete}
         >
-          🗑
+          <TrashIcon />
         </button>
       </div>
     </div>

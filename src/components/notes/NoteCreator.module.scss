@@ -2,18 +2,30 @@
   border: 1px solid var(--table-border);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  color: var(--page-text);
+  display: flex;
+  min-height: 3.75rem;
   margin-bottom: 1.5rem;
 }
 
 .collapsed {
-  color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  color: var(--page-text);
   cursor: text;
+  display: flex;
   font-size: 0.95rem;
+  min-height: 3.75rem;
+  opacity: 0.72;
   padding: 0.85rem 1rem;
+  width: 100%;
 }
 
 .expanded {
+  box-sizing: border-box;
+  min-height: 9rem;
   padding: 0.75rem 1rem;
+  width: 100%;
 }
 
 .titleInput {
@@ -28,7 +40,8 @@
   width: 100%;
 
   &::placeholder {
-    opacity: 0.5;
+    color: var(--page-text);
+    opacity: 0.72;
   }
 }
 
@@ -41,13 +54,14 @@
   color: var(--page-text);
   font: inherit;
   font-size: 0.9rem;
-  min-height: 2rem;
+  min-height: 5rem;
   outline: none;
   width: 100%;
 }
 
 .checklistArea {
   margin-top: 0.5rem;
+  min-height: 5rem;
 }
 
 .checklistRow {
@@ -66,6 +80,11 @@
   font-size: 0.9rem;
   outline: none;
   padding: 0;
+
+  &::placeholder {
+    color: var(--page-text);
+    opacity: 0.72;
+  }
 }
 
 .addItemButton {
@@ -104,8 +123,8 @@
   padding: 0.3rem 0.75rem;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.06);
     border-radius: 0.25rem;
+    background: var(--sidebar-button-hover);
   }
 }
 

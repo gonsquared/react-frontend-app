@@ -23,6 +23,111 @@ type Props = {
 
 type Popover = "color" | "label" | "reminder" | null;
 
+function PaletteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M12 3a9 9 0 0 0 0 18h1.2a1.8 1.8 0 0 0 1.2-3.15 1.45 1.45 0 0 1 .95-2.55H17a4 4 0 0 0 4-4C21 6.8 17 3 12 3z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <circle cx="8" cy="10" r="1" fill="currentColor" />
+      <circle cx="11" cy="7" r="1" fill="currentColor" />
+      <circle cx="15" cy="8" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PinIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M14 3l7 7-3 1-4 4v5l-2 2-3.5-6.5L2 12l2-2h5l4-4 1-3z"
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M20 13l-7 7L4 11V4h7l9 9z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9zM10 21h4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function ChecklistIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M5 7l2 2 4-4M13 8h6M5 17l2 2 4-4M13 18h6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="14"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M7 16l3.5-3.5 2.5 2.5 2-2 2 3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <circle cx="15.5" cy="9.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
 export default function NoteToolbar({
   noteId,
   color,
@@ -97,7 +202,7 @@ export default function NoteToolbar({
         aria-label="Change note color"
         onClick={() => togglePopover("color")}
       >
-        🎨
+        <PaletteIcon />
       </button>
       {openPopover === "color" && (
         <div className={styles.popover} role="dialog" aria-label="Color picker">
@@ -128,7 +233,7 @@ export default function NoteToolbar({
         aria-pressed={isPinned}
         onClick={onPinToggle}
       >
-        📌
+        <PinIcon filled={isPinned} />
       </button>
 
       {/* Label manager */}
@@ -138,7 +243,7 @@ export default function NoteToolbar({
         aria-label="Edit labels"
         onClick={() => togglePopover("label")}
       >
-        🏷
+        <TagIcon />
       </button>
       {openPopover === "label" && (
         <div className={styles.popover} role="dialog" aria-label="Label manager">
@@ -197,7 +302,7 @@ export default function NoteToolbar({
         aria-label="Set reminder"
         onClick={() => togglePopover("reminder")}
       >
-        🔔
+        <BellIcon />
       </button>
       {openPopover === "reminder" && (
         <div className={styles.popover} role="dialog" aria-label="Reminder picker">
@@ -228,7 +333,7 @@ export default function NoteToolbar({
         aria-pressed={noteType === "checklist"}
         onClick={() => onNoteTypeChange(noteType === "checklist" ? "text" : "checklist")}
       >
-        ✓
+        <ChecklistIcon />
       </button>
 
       {/* Image upload (only when editing an existing note) */}
@@ -239,7 +344,7 @@ export default function NoteToolbar({
         disabled={!noteId || uploading}
         onClick={() => fileInputRef.current?.click()}
       >
-        🖼
+        <ImageIcon />
       </button>
       <input
         ref={fileInputRef}
