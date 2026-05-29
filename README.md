@@ -108,6 +108,9 @@ Start the backend service before using any authenticated pages.
 | -------------------- | ---------------------------------------------------- |
 | `bun run dev`        | Start development server with HMR (port 5173)        |
 | `bun run build`      | Type-check and produce a production build            |
+| `bun run test:e2e`   | Run Cypress end-to-end tests                         |
+| `bun run test:e2e:docker` | Run Cypress end-to-end tests in Docker          |
+| `bun run cypress:open` | Open the Cypress app                               |
 | `bun run preview`    | Serve the production build locally                   |
 | `bun run lint`       | Run ESLint across all TypeScript source files        |
 | `bun run precommit`  | Run the full pre-commit gate (lint and build)        |
@@ -121,6 +124,19 @@ git config core.hooksPath .githooks
 ```
 
 Every commit triggers `bun run precommit`, which runs lint and a production build.
+
+## Cypress
+
+Cypress end-to-end tests live in `cypress/e2e`. Start the Vite dev server before running the suite:
+
+```bash
+bun run dev
+bun run test:e2e
+```
+
+Use `bun run test:e2e:docker` to run the same suite in the official Cypress Docker image.
+
+Cypress is intentionally not part of the pre-commit hook.
 
 ## Linting
 
