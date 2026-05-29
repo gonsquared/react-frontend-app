@@ -30,7 +30,6 @@ describe("App", () => {
 
     cy.contains("h1", "Home Page").should("be.visible");
     cy.contains("a", "Users").should("be.visible");
-    cy.contains("a", "Notes").should("be.visible");
     cy.contains("a", "My Notes").should("be.visible");
   });
 });

@@ -87,6 +87,21 @@
   }
 }
 
+.checkedChecklistSection {
+  border-top: 1px solid var(--table-border);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.checkedChecklistRow {
+  opacity: 0.62;
+}
+
+.checkedChecklistInput {
+  color: var(--page-text);
+  text-decoration: line-through;
+}
+
 .addItemButton {
   background: none;
   border: none;

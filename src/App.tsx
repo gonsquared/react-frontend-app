@@ -9,7 +9,6 @@ import Home from "./pages/home/HomePage";
 import ActivateAccountPage from "./pages/activate-account/ActivateAccountPage";
 import LoginPage from "./pages/login/LoginPage";
 import KeepGrid from "./pages/notes/KeepGrid";
-import NotesPage from "./pages/notes/NotesPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import RegisterPage from "./pages/register/RegisterPage";
 import Users from "./pages/users/UsersPage";
@@ -62,7 +61,6 @@ export default function App() {
             >
               <Route path="/home" element={<Home />} />
               <Route path="/my-notes" element={<KeepGrid />} />
-              <Route path="/notes" element={<NotesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/users" element={<Users />} />
             </Route>

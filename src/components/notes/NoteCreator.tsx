@@ -61,7 +61,6 @@ export default function NoteCreator({ allLabels, onCreated }: Props) {
         body: JSON.stringify({
           title: title.trim() || "Untitled",
           contents: noteType === "text" ? getContents() : "",
-          status: "not published",
           color,
           isPinned,
           labels,
@@ -92,6 +91,10 @@ export default function NoteCreator({ allLabels, onCreated }: Props) {
 
   const updateChecklistItem = (index: number, text: string) =>
     setChecklistItems((prev) => prev.map((item, i) => i === index ? { ...item, text } : item));
+
+  const checklistRows = checklistItems.map((item, index) => ({ item, index }));
+  const uncheckedChecklistRows = checklistRows.filter(({ item }) => !item.checked);
+  const checkedChecklistRows = checklistRows.filter(({ item }) => item.checked);
 
   if (!expanded) {
     return (
@@ -132,35 +135,35 @@ export default function NoteCreator({ allLabels, onCreated }: Props) {
           />
         ) : (
           <div className={styles.checklistArea} aria-label="Checklist items">
-            {checklistItems.map((item, i) => (
-              <div key={i} className={styles.checklistRow}>
+            {uncheckedChecklistRows.map(({ item, index }) => (
+              <div key={index} className={styles.checklistRow}>
                 <input
                   type="checkbox"
                   checked={item.checked}
                   onChange={(e) =>
                     setChecklistItems((prev) =>
-                      prev.map((it, idx) => idx === i ? { ...it, checked: e.target.checked } : it)
+                      prev.map((it, idx) => idx === index ? { ...it, checked: e.target.checked } : it)
                     )
                   }
-                  aria-label={`Item ${i + 1} checked`}
+                  aria-label={`Item ${index + 1} checked`}
                 />
                 <input
                   className={styles.checklistInput}
                   type="text"
                   value={item.text}
                   placeholder="List item…"
-                  onChange={(e) => updateChecklistItem(i, e.target.value)}
+                  onChange={(e) => updateChecklistItem(index, e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       setChecklistItems((prev) => [
-                        ...prev.slice(0, i + 1),
+                        ...prev.slice(0, index + 1),
                         { text: "", checked: false },
-                        ...prev.slice(i + 1),
+                        ...prev.slice(index + 1),
                       ]);
                     }
                   }}
-                  aria-label={`Checklist item ${i + 1}`}
+                  aria-label={`Checklist item ${index + 1}`}
                 />
               </div>
             ))}
@@ -171,6 +174,35 @@ export default function NoteCreator({ allLabels, onCreated }: Props) {
             >
               + Add item
             </button>
+            {checkedChecklistRows.length > 0 && (
+              <div className={styles.checkedChecklistSection}>
+                {checkedChecklistRows.map(({ item, index }) => (
+                  <div
+                    key={index}
+                    className={`${styles.checklistRow} ${styles.checkedChecklistRow}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.checked}
+                      onChange={(e) =>
+                        setChecklistItems((prev) =>
+                          prev.map((it, idx) => idx === index ? { ...it, checked: e.target.checked } : it)
+                        )
+                      }
+                      aria-label={`Item ${index + 1} checked`}
+                    />
+                    <input
+                      className={`${styles.checklistInput} ${styles.checkedChecklistInput}`}
+                      type="text"
+                      value={item.text}
+                      placeholder="List item…"
+                      onChange={(e) => updateChecklistItem(index, e.target.value)}
+                      aria-label={`Checklist item ${index + 1}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {errorMessage && (

@@ -40,7 +40,9 @@
 
 .appBody {
   display: flex;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .skipLink {
@@ -65,14 +67,17 @@
 }
 
 .sidebar {
-  position: relative;
   display: flex;
   flex-direction: column;
   width: 12rem;
+  height: 100vh;
+  box-sizing: border-box;
   flex-shrink: 0;
   padding: 1rem;
   border-right: 1px solid var(--sidebar-border);
   background-color: var(--sidebar-background);
+  position: sticky;
+  top: 0;
 
   a {
     display: block;
@@ -316,6 +321,9 @@
 
 .content {
   flex: 1;
+  min-width: 0;
+  height: 100vh;
+  overflow: auto;
   padding: 1rem;
   outline: none;
 
@@ -351,6 +359,8 @@
 @media (max-width: 640px) {
   .appBody {
     flex-direction: column;
+    height: auto;
+    overflow: visible;
   }
 
   .sidebar {
@@ -359,9 +369,13 @@
     align-items: center;
     gap: 0.75rem;
     width: auto;
+    height: auto;
     padding: 0.75rem 1rem;
     border-right: 0;
     border-bottom: 1px solid var(--sidebar-border);
+    position: sticky;
+    top: 0;
+    z-index: 3;
   }
 
   .sidebarTop {
@@ -427,6 +441,8 @@
   }
 
   .content {
+    height: auto;
+    overflow: visible;
     padding: 1rem;
   }
 

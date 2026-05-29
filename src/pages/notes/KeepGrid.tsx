@@ -172,56 +172,66 @@ export default function KeepGrid() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.searchBar}>
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
-      </div>
-      <ReminderBanner notes={notes} onNoteUpdated={handleUpdated} />
-      <NoteCreator allLabels={allLabels} onCreated={handleCreated} />
-      <LabelFilter
-        labels={distinctLabels}
-        activeLabels={activeLabels}
-        onToggle={toggleLabel}
-      />
-      {errorMessage && (
-        <p className={styles.errorMessage} role="alert">{errorMessage}</p>
-      )}
-      {filteredNotes.length === 0 && !errorMessage && (
-        <p className={styles.emptyState}>No notes found.</p>
-      )}
-      {pinnedNotes.length > 0 && (
-        <>
-          <p className={styles.sectionLabel}>Pinned</p>
-          <div className={styles.grid}>
-            {pinnedNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onClick={() => setEditingNote(note)}
-                onPin={(e) => void handlePin(note, e)}
-                onDelete={(e) => { e.stopPropagation(); void handleDeleted(note.id); }}
-              />
-            ))}
+      <div className={styles.mainColumn}>
+        <div className={styles.fixedControls}>
+          <div className={styles.searchBar}>
+            <SearchBar value={searchQuery} onChange={setSearchQuery} />
           </div>
-        </>
-      )}
-      {otherNotes.length > 0 && (
-        <>
-          {pinnedNotes.length > 0 && (
-            <p className={styles.sectionLabel}>Others</p>
+          <ReminderBanner notes={notes} onNoteUpdated={handleUpdated} />
+          <NoteCreator allLabels={allLabels} onCreated={handleCreated} />
+        </div>
+        <div className={styles.notesScroll}>
+          {errorMessage && (
+            <p className={styles.errorMessage} role="alert">{errorMessage}</p>
           )}
-          <div className={styles.grid}>
-            {otherNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onClick={() => setEditingNote(note)}
-                onPin={(e) => void handlePin(note, e)}
-                onDelete={(e) => { e.stopPropagation(); void handleDeleted(note.id); }}
-              />
-            ))}
-          </div>
-        </>
-      )}
+          {filteredNotes.length === 0 && !errorMessage && (
+            <p className={styles.emptyState}>No notes found.</p>
+          )}
+          {pinnedNotes.length > 0 && (
+            <>
+              <p className={styles.sectionLabel}>Pinned</p>
+              <div className={styles.grid}>
+                {pinnedNotes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onClick={() => setEditingNote(note)}
+                    onPin={(e) => void handlePin(note, e)}
+                    onDelete={(e) => { e.stopPropagation(); void handleDeleted(note.id); }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          {otherNotes.length > 0 && (
+            <>
+              {pinnedNotes.length > 0 && (
+                <p className={styles.sectionLabel}>Others</p>
+              )}
+              <div className={styles.grid}>
+                {otherNotes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onClick={() => setEditingNote(note)}
+                    onPin={(e) => void handlePin(note, e)}
+                    onDelete={(e) => { e.stopPropagation(); void handleDeleted(note.id); }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <aside className={styles.labelRail}>
+        <div className={styles.labelRailInner}>
+          <LabelFilter
+            labels={distinctLabels}
+            activeLabels={activeLabels}
+            onToggle={toggleLabel}
+          />
+        </div>
+      </aside>
       {editingNote && (
         <NoteEditModal
           note={editingNote}

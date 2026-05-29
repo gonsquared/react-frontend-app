@@ -61,11 +61,14 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
     ? getApiUrl(`/api/images/${note.imagePath}`)
     : null;
   const colorHex = getNoteColorHex(note.color);
-  const cardStyle = note.color ? { backgroundColor: colorHex } : undefined;
+  const cardStyle = note.color
+    ? { backgroundColor: colorHex, color: "#202020" }
+    : undefined;
   const contentPreview =
     note.noteType === "text"
       ? getTextFromHtml(note.contents).slice(0, 200)
       : null;
+  const uncheckedChecklistItems = note.checklistItems.filter((item) => !item.checked);
   const reminderIsFuture =
     note.reminderAt !== null && new Date(note.reminderAt) > new Date();
 
@@ -101,17 +104,26 @@ export default function NoteCard({ note, onClick, onPin, onDelete }: Props) {
       {note.noteType === "text" && contentPreview && (
         <p className={styles.preview}>{contentPreview}</p>
       )}
-      {note.noteType === "checklist" && note.checklistItems.length > 0 && (
+      {note.noteType === "checklist" && uncheckedChecklistItems.length > 0 && (
         <ul className={styles.checklist}>
-          {note.checklistItems.slice(0, 6).map((item, i) => (
-            <li key={i} className={item.checked ? styles.checked : undefined}>
-              {item.text}
+          {uncheckedChecklistItems.slice(0, 6).map((item, i) => (
+            <li key={i}>
+              <span className={styles.checklistBox} aria-hidden="true" />
+              <span>{item.text}</span>
             </li>
           ))}
         </ul>
       )}
       {note.labels.length > 0 && (
-        <div className={styles.labels}>
+        <div
+          className={`${styles.labels} ${
+            note.title || contentPreview || note.checklistItems.length > 0
+              ? `${styles.labelsWithDivider} ${
+                  note.noteType === "checklist" ? styles.labelsAfterChecklist : ""
+                }`
+              : ""
+          }`}
+        >
           {note.labels.map((label) => (
             <span key={label} className={styles.label}>
               {label}

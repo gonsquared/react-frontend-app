@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
 const focusableSelector = [
@@ -30,6 +30,12 @@ export const useDialogFocusTrap = ({
   initialFocusRef,
   onEscape,
 }: DialogFocusTrapOptions) => {
+  const onEscapeRef = useRef(onEscape);
+
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  }, [onEscape]);
+
   useEffect(() => {
     if (!isOpen || !dialogRef.current) return;
 
@@ -42,7 +48,7 @@ export const useDialogFocusTrap = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onEscape?.();
+        onEscapeRef.current?.();
         return;
       }
 
@@ -83,5 +89,5 @@ export const useDialogFocusTrap = ({
         previouslyFocusedElement.focus();
       }
     };
-  }, [dialogRef, initialFocusRef, isOpen, onEscape]);
+  }, [dialogRef, initialFocusRef, isOpen]);
 };

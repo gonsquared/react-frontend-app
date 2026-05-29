@@ -2,7 +2,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  align-content: flex-start;
+  margin: 0;
+  padding: 0.25rem;
 }
 
 .chip {
@@ -30,4 +32,10 @@
   background: var(--page-text);
   border-color: var(--page-text);
   color: var(--page-background);
+}
+
+@media (max-width: 900px) {
+  .filter {
+    padding: 0;
+  }
 }

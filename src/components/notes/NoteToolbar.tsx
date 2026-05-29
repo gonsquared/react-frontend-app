@@ -19,6 +19,7 @@ type Props = {
   onNoteTypeChange: (type: NoteType) => void;
   onReminderChange: (date: string | null) => void;
   onImageUploaded?: (path: string) => void;
+  popoverPlacement?: "below" | "above";
 };
 
 type Popover = "color" | "label" | "reminder" | null;
@@ -142,15 +143,14 @@ export default function NoteToolbar({
   onNoteTypeChange,
   onReminderChange,
   onImageUploaded,
+  popoverPlacement = "below",
 }: Props) {
   const [openPopover, setOpenPopover] = useState<Popover>(null);
   const [labelInput, setLabelInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const togglePopover = (name: Popover) =>
-    setOpenPopover((current) => (current === name ? null : name));
+  const labelPopoverRef = useRef<HTMLDivElement>(null);
 
   const addLabel = (label: string) => {
     const trimmed = label.trim();
@@ -159,6 +159,16 @@ export default function NoteToolbar({
     }
     setLabelInput("");
   };
+
+  const commitPendingLabel = () => {
+    if (labelInput.trim()) addLabel(labelInput);
+  };
+
+  const togglePopover = (name: Popover) =>
+    setOpenPopover((current) => {
+      if (current === "label") commitPendingLabel();
+      return current === name ? null : name;
+    });
 
   const removeLabel = (label: string) =>
     onLabelsChange(labels.filter((l) => l !== label));
@@ -194,7 +204,11 @@ export default function NoteToolbar({
     : "";
 
   return (
-    <div className={styles.toolbar}>
+    <div
+      className={`${styles.toolbar} ${
+        popoverPlacement === "above" ? styles.popoverAbove : ""
+      }`}
+    >
       {/* Color picker */}
       <button
         type="button"
@@ -246,7 +260,18 @@ export default function NoteToolbar({
         <TagIcon />
       </button>
       {openPopover === "label" && (
-        <div className={styles.popover} role="dialog" aria-label="Label manager">
+        <div
+          ref={labelPopoverRef}
+          className={styles.popover}
+          role="dialog"
+          aria-label="Label manager"
+          onBlur={(e) => {
+            if (labelPopoverRef.current?.contains(e.relatedTarget as Node)) {
+              return;
+            }
+            commitPendingLabel();
+          }}
+        >
           <input
             className={styles.labelInput}
             type="text"
@@ -305,7 +330,11 @@ export default function NoteToolbar({
         <BellIcon />
       </button>
       {openPopover === "reminder" && (
-        <div className={styles.popover} role="dialog" aria-label="Reminder picker">
+        <div
+          className={`${styles.popover} ${styles.reminderPopover}`}
+          role="dialog"
+          aria-label="Reminder picker"
+        >
           <input
             className={styles.reminderInput}
             type="datetime-local"

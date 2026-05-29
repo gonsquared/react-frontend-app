@@ -1,4 +1,3 @@
-export type NoteStatus = "published" | "not published" | "archived";
 export type NoteColor =
   | "red" | "pink" | "orange" | "yellow" | "teal"
   | "green" | "cyan" | "blue" | "purple" | "gray"
@@ -14,7 +13,6 @@ export type Note = {
   id: string;
   title: string;
   contents: string;
-  status: NoteStatus;
   color: NoteColor;
   isPinned: boolean;
   labels: string[];
@@ -31,7 +29,6 @@ export type Note = {
 export type NotePayload = {
   title: string;
   contents: string;
-  status: NoteStatus;
   color: NoteColor;
   isPinned: boolean;
   labels: string[];

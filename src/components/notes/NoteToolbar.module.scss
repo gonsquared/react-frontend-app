@@ -48,6 +48,7 @@
   background: var(--sidebar-button-background);
   border: 1px solid var(--table-border);
   border-radius: 0.5rem;
+  box-sizing: border-box;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   left: 0;
   padding: 0.75rem;
@@ -55,6 +56,19 @@
   top: calc(100% + 0.5rem);
   z-index: 100;
   min-width: 200px;
+}
+
+.popoverAbove {
+  .popover {
+    bottom: calc(100% + 0.75rem);
+    top: auto;
+  }
+}
+
+.reminderPopover {
+  min-width: 17rem;
+  padding: 1rem;
+  width: 17rem;
 }
 
 .colorGrid {
@@ -91,6 +105,7 @@
 }
 
 .labelInput {
+  box-sizing: border-box;
   border: 1px solid var(--table-border);
   border-radius: 0.25rem;
   background: var(--page-background);
@@ -127,6 +142,7 @@
 }
 
 .reminderInput {
+  box-sizing: border-box;
   border: 1px solid var(--table-border);
   border-radius: 0.25rem;
   background: var(--page-background);

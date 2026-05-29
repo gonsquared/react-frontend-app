@@ -2,7 +2,6 @@ const sampleNote = {
   id: "note-1",
   title: "test",
   contents: "<p>test</p>",
-  status: "not published",
   color: null,
   isPinned: true,
   labels: [],

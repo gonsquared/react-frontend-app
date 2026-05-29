@@ -54,8 +54,25 @@
   padding: 0;
 
   li {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
     padding: 0.1rem 0;
   }
+}
+
+.checklistBox {
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 0.15rem;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.65rem;
+  height: 0.9rem;
+  justify-content: center;
+  line-height: 1;
+  width: 0.9rem;
 }
 
 .checked {
@@ -68,6 +85,15 @@
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-top: 0.5rem;
+}
+
+.labelsWithDivider {
+  border-top: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  padding-top: 0.5rem;
+}
+
+.labelsAfterChecklist {
+  margin-left: calc(0.9rem + 0.45rem);
 }
 
 .label {
